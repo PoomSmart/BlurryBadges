@@ -1,0 +1,10 @@
+{
+	entry = {
+		bundle = "BackdropBadgePref";
+		cell = PSLinkCell;
+		detail = "BackdropBadgePrefController";
+		icon = "BackdropBadgePref.png";
+		isController = 1;
+		label = "BlurryBadges";
+	};
+}
