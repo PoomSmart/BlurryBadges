@@ -15,6 +15,10 @@
 - (void)setView:(id)view;
 @end
 
+@interface UIImage (Addition)
++ (UIImage *)imageNamed:(NSString *)name inBundle:(NSBundle *)bundle;
+@end
+
 @interface BackdropBadgePrefController : PSViewController <UITableViewDataSource, UITableViewDelegate> {
 	int badgeBorderSize;
 	int badgeBorderColorMode;
@@ -122,7 +126,7 @@ static float floatValueForKey(CFStringRef key, float defaultValue)
 - (NSInteger)tableView:(UITableView *)table numberOfRowsInSection:(NSInteger)section
 {
 	if (section <= 1)
-		return 4;
+		return 5;
 	if (section == [self numberOfSectionsInTableView:table]-1)
 		return 2;
 	if (section == 2)
@@ -180,6 +184,9 @@ static float floatValueForKey(CFStringRef key, float defaultValue)
 						cell.textLabel.text = @"Medium";
 						break;
 					case 3:
+						cell.textLabel.text = @"Pre-iOS 7";
+						break;
+					case 4:
 						cell.textLabel.text = @"Huge";
 						break;
 				}
@@ -198,6 +205,9 @@ static float floatValueForKey(CFStringRef key, float defaultValue)
 						break;
 					case 3:
 						cell.textLabel.text = @"Black";
+						break;
+					case 4:
+						cell.textLabel.text = @"Random";
 						break;
 				}
 				break;
@@ -263,7 +273,7 @@ static float floatValueForKey(CFStringRef key, float defaultValue)
 			break;
 	}
 	if (section <= 1) {
-		for (NSInteger i = 0; i <= 3; i++) {
+		for (NSInteger i = 0; i <= 4; i++) {
 			[tableView cellForRowAtIndexPath:[NSIndexPath indexPathForRow:i inSection:section]].accessoryType = (value == i) ? UITableViewCellAccessoryCheckmark : UITableViewCellAccessoryNone;
 		}
 		CFPreferencesSetAppValue(key, (CFTypeRef)@(value), SB);

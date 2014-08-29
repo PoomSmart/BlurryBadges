@@ -1,16 +1,10 @@
 #import <UIKit/UIKit.h>
 #import <QuartzCore/QuartzCore.h>
 
-@interface SBIconColorSettings : NSObject
-@end
-
-@interface SBRootSettings : NSObject
-- (SBIconColorSettings *)iconColorSettings;
-@end
-
-@interface SBPrototypeController : NSObject
+@interface SBWallpaperController : NSObject
 + (id)sharedInstance;
-- (SBRootSettings *)rootSettings;
+- (int)variant;
+- (UIColor *)averageColorForVariant:(int)variant;
 @end
 
 @interface SBIcon : NSObject
@@ -30,15 +24,6 @@
 @property(assign, nonatomic) CGPoint wallpaperRelativeImageCenter;
 - (SBIcon *)icon;
 - (SBIconImageView *)_iconImageView;
-- (CGRect)_frameForAccessoryView;
-@end
-
-@interface SBIconListView : UIView
-- (CGPoint)_wallpaperRelativeIconCenterForIconView:(SBIconView *)iconView;
-@end
-
-@interface SBFolderController : NSObject
-- (SBIconListView *)iconListViewContainingIcon:(SBIcon *)icon;
 @end
 
 @interface SBIconModel : NSObject
@@ -48,19 +33,16 @@
 @interface SBIconController : NSObject
 + (id)sharedInstance;
 - (SBIconModel *)model;
-- (SBFolderController *)_rootFolderController;
 @end
 
 @interface SBFolderIconView : SBIconView
 @end
 
 @interface SBIconBadgeView : UIView
-- (CGPoint)accessoryOriginForIconBounds:(CGRect)frame;
 - (void)setWallpaperRelativeCenter:(CGPoint)center;
 @end
 
 @interface SBIconBlurryBackgroundView : UIView
-- (void)setWantsBlurEvaluator:(SBIconColorSettings *)iconColorSettings;
 - (void)setWallpaperRelativeCenter:(CGPoint)center;
 @end
 
@@ -82,10 +64,6 @@ struct pixel {
 - (UIColor *)shiftColor:(CGFloat)shift;
 - (UIColor *)lighterColor;
 - (UIColor *)darkerColor;
-@end
-
-@interface UIColor (API)
-+ (UIColor *)systemGrayColor;
 @end
 
 @implementation UIImage (Addition)
@@ -151,9 +129,20 @@ static CGFloat borderSizeFromMode(int mode)
 		case 2:
 			return 2.5;
 		case 3:
+			return 3;
+		case 4:
 			return 4;
 	}
 	return 0;
+}
+
+static UIColor *randomColor()
+{
+	CGFloat hue = (arc4random()%256/256.0);
+	CGFloat saturation = (arc4random()%256/256.0);
+	CGFloat brightness = (arc4random()%256/256.0);
+	UIColor *color = [UIColor colorWithHue:hue saturation:saturation brightness:brightness alpha:1];
+	return color;
 }
 
 static UIColor *borderColorFromMode(int mode, UIColor *color)
@@ -167,6 +156,8 @@ static UIColor *borderColorFromMode(int mode, UIColor *color)
 			return [UIColor whiteColor];
 		case 3:
 			return [UIColor blackColor];
+		case 4:
+			return randomColor();
 	}
 	return [UIColor clearColor];
 }
@@ -175,7 +166,8 @@ static UIColor *borderColorFromMode(int mode, UIColor *color)
 
 - (void)didAddSubview:(id)arg1
 {
-	return;
+	if (self.tag == 9596)
+		return;
 }
 
 %end
@@ -230,33 +222,29 @@ static void bbHook(SBIconBadgeView *self, SBIcon *icon, int location, BOOL highl
 	
 	UIColor *borderColor = borderColorFromMode(borderColorMode, dominantColor);
 	if ([icon isFolderIcon]) {
+		SBWallpaperController *wallpaperCont = [%c(SBWallpaperController) sharedInstance];
+		dominantColor = [wallpaperCont averageColorForVariant:1];
 		switch (borderColorMode) {
 			case 0:
-				borderColor = [[UIColor systemGrayColor] lighterColor];
+				borderColor = [dominantColor lighterColor];
 				break;
 			case 1:
-				borderColor = [[UIColor systemGrayColor] darkerColor];
+				borderColor = [dominantColor darkerColor];
 				break;
-		} 
+		}
 	}
 
 	CGFloat borderWidth = borderSizeFromMode(borderWidthMode);
-   
-	for (id view in [bgView subviews]) {
-		NSString *theClass = NSStringFromClass([view class]);
-		if ([theClass isEqualToString:@"SBIconBlurryBackgroundView"]) {
 
-			((UIView *)view).frame = CGRectMake(0, 0, self.frame.size.width, self.frame.size.height);
-			((UIView *)view).layer.mask = maskLayer;
-			((UIView *)view).layer.borderColor = borderColor.CGColor;
+	SBIconBlurryBackgroundView *blurView = (SBIconBlurryBackgroundView *)[bgView viewWithTag:9596];
+	blurView.frame = CGRectMake(0, 0, self.frame.size.width, self.frame.size.height);
+	blurView.layer.mask = maskLayer;
+	blurView.layer.borderColor = borderWidthMode == 0 ? nil : borderColor.CGColor;
+	blurView.layer.borderWidth = borderWidth;
 
-			((UIView *)view).layer.borderWidth = borderWidth;
-
-			UIView *tint = [(UIView *)view viewWithTag:9597];
-			[tint setBackgroundColor:dominantColor];
-			tint.alpha = tintAlpha;
-		}
-	}
+	UIView *tint = [blurView viewWithTag:9597];
+	[tint setBackgroundColor:dominantColor];
+	tint.alpha = tintAlpha;
 }
 
 /*%hook SBFolderIconView
@@ -327,11 +315,7 @@ static void bbHook(SBIconBadgeView *self, SBIcon *icon, int location, BOOL highl
 - (void)setWallpaperRelativeCenter:(CGPoint)point
 {
 	SBDarkeningImageView *bgView = MSHookIvar<SBDarkeningImageView *>(self, "_backgroundView");
-	for (id view in [bgView subviews]) {
-		NSString *theClass = NSStringFromClass([view class]);
-			if ([theClass isEqualToString:@"SBIconBlurryBackgroundView"])
-				[((SBIconBlurryBackgroundView *)view) setWallpaperRelativeCenter:point];
-	}
+	[(SBIconBlurryBackgroundView *)[bgView viewWithTag:9596] setWallpaperRelativeCenter:point];
 }
 
 - (void)layoutSubviews
@@ -347,9 +331,10 @@ static void bbHook(SBIconBadgeView *self, SBIcon *icon, int location, BOOL highl
 		loadSettings();
 		SBDarkeningImageView *bgView = MSHookIvar<SBDarkeningImageView *>(self, "_backgroundView");
 		[bgView setImage:nil];
-		SBIconBlurryBackgroundView *blurView = [[%c(SBIconBlurryBackgroundView) alloc] initWithFrame:CGRectMake(0, 0, 24, 24)];
-		//[blurView setWantsBlurEvaluator:[[[%c(SBPrototypeController) sharedInstance] rootSettings] iconColorSettings]];
-		UIView *tintView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 24, 24)];
+		CGRect defaultFrame = CGRectMake(0, 0, 24, 24);
+		SBIconBlurryBackgroundView *blurView = [[%c(SBIconBlurryBackgroundView) alloc] initWithFrame:defaultFrame];
+		blurView.tag = 9596;
+		UIView *tintView = [[UIView alloc] initWithFrame:defaultFrame];
 		tintView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
 		tintView.tag = 9597;
 		
