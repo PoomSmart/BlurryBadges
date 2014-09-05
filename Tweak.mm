@@ -1,5 +1,6 @@
 #import <UIKit/UIKit.h>
 #import <QuartzCore/QuartzCore.h>
+#import <notify.h>
 
 @interface SBWallpaperController : NSObject
 + (id)sharedInstance;
@@ -22,6 +23,8 @@
 }
 + (CGSize)defaultIconImageSize;
 @property(assign, nonatomic) CGPoint wallpaperRelativeImageCenter;
+- (int)location;
+- (CGPoint)_centerForCloseBoxRelativeToVisibleImageFrame:(CGRect)visibleImageFrame;
 - (SBIcon *)icon;
 - (SBIconImageView *)_iconImageView;
 @end
@@ -39,6 +42,7 @@
 @end
 
 @interface SBIconBadgeView : UIView
+- (BOOL)displayingAccessory;
 - (void)setWallpaperRelativeCenter:(CGPoint)center;
 @end
 
@@ -190,13 +194,6 @@ int borderColorMode = 2;
 int borderWidthMode = 3;
 CGFloat tintAlpha = 0.65;
 
-
-static CGPoint badgePointCorrection(SBIconView *iconView)
-{
-	CGPoint defaultCenter = MSHookIvar<CGPoint>(iconView, "_wallpaperRelativeCloseBoxCenter");
-	return CGPointMake(defaultCenter.x + [%c(SBIconView) defaultIconImageSize].width, defaultCenter.y);
-}
-
 static void loadSettings()
 {
 	id r = [[NSUserDefaults standardUserDefaults] objectForKey:@"SBBadgeBorderColorMode"];
@@ -210,7 +207,7 @@ static void loadSettings()
 
 }
 
-static void bbHook(SBIconBadgeView *self, SBIcon *icon, int location, BOOL highlighted)
+static void bbHook(SBIconBadgeView *self, SBIcon *icon, int location)
 {
 	UIImage *iconImage = [icon getIconImage:2];
 	UIColor *dominantColor = [iconImage dominantColor];
@@ -247,81 +244,79 @@ static void bbHook(SBIconBadgeView *self, SBIcon *icon, int location, BOOL highl
 	tint.alpha = tintAlpha;
 }
 
-/*%hook SBFolderIconView
-
-- (void)_updateAdaptiveColors
+static void hookBadge(SBIconView *iconView)
 {
-	%orig;
-	SBIconBadgeView *badgeView = (SBIconBadgeView *)MSHookIvar<UIView *>(self, "_accessoryView");
-	[badgeView setWallpaperRelativeCenter:badgePointCorrection(self, badgeView)];
+	if (MSHookIvar<SBIcon *>(iconView, "_icon") != nil) {
+		SBIconBadgeView *badgeView = (SBIconBadgeView *)MSHookIvar<UIView *>(iconView, "_accessoryView");
+		if (badgeView != nil)
+			bbHook(badgeView, iconView.icon, iconView.location);
+	}
 }
 
-%end*/
-
-/*%hook SBFolderIconImageView
-
-- (void)setWallpaperRelativeCenter:(CGPoint)center
-{
-	%orig;
-	SBIconBadgeView *badgeView = (SBIconBadgeView *)MSHookIvar<UIView *>((SBFolderIconView *)[self superview], "_accessoryView");
-	[badgeView setWallpaperRelativeCenter:badgePointCorrection((SBFolderIconView *)[self superview], badgeView)];
-}
-
-%end*/
+extern "C" CGRect UIRectCenteredAboutPoint(CGRect, CGPoint, CGFloat, CGFloat);
 
 %hook SBIconView
+
+static void setBadgePosition(SBIconView *iconView, CGPoint center)
+{
+	if (iconView == nil || CGPointEqualToPoint(center, CGPointZero))
+		return;
+	if (MSHookIvar<SBIcon *>(iconView, "_icon") == nil)
+		return;
+	SBIconBadgeView *badgeView = (SBIconBadgeView *)MSHookIvar<UIView *>(iconView, "_accessoryView");
+	if (badgeView == nil)
+		return;
+	SBDarkeningImageView *bgView = MSHookIvar<SBDarkeningImageView *>(badgeView, "_backgroundView");
+	UIView *blurView = [bgView viewWithTag:9596];
+	CGRect visibleImageRect = MSHookIvar<CGRect>(iconView, "_visibleImageRect");
+	CGRect visibleImageFrame = UIRectCenteredAboutPoint(visibleImageRect, center, visibleImageRect.size.width, visibleImageRect.size.height);
+	CGPoint closeBoxCenter = visibleImageFrame.origin;
+	CGPoint wallpaperRelativeBadgeCenter = CGPointMake(closeBoxCenter.x + visibleImageRect.size.width - 0.5*blurView.frame.size.width + 10, closeBoxCenter.y);
+	if (CGPointEqualToPoint(wallpaperRelativeBadgeCenter, CGPointZero))
+		return;
+	if ([badgeView respondsToSelector:@selector(displayingAccessory)])
+		[badgeView setWallpaperRelativeCenter:wallpaperRelativeBadgeCenter];
+}
 
 - (void)setWallpaperRelativeImageCenter:(CGPoint)center
 {
 	%orig;
-	SBIconBadgeView *badgeView = (SBIconBadgeView *)MSHookIvar<UIView *>(self, "_accessoryView");
-	if ([badgeView respondsToSelector:@selector(setWallpaperRelativeCenter:)])
-		[badgeView setWallpaperRelativeCenter:badgePointCorrection(self)];
+	setBadgePosition(self, center);
 }
 
 - (void)_updateAccessoryViewWithAnimation:(id)arg1
 {
 	%orig;
-	SBIconBadgeView *badgeView = (SBIconBadgeView *)MSHookIvar<UIView *>(self, "_accessoryView");
-	if ([badgeView respondsToSelector:@selector(setWallpaperRelativeCenter:)])
-		[badgeView setWallpaperRelativeCenter:badgePointCorrection(self)];
+	hookBadge(self);
+}
+
+- (void)_applyEditingStateAnimated:(BOOL)animated
+{
+	%orig;
+	setBadgePosition(self, self.wallpaperRelativeImageCenter);
+}
+
+- (void)layoutSubviews
+{
+	%orig;
+	setBadgePosition(self, self.wallpaperRelativeImageCenter);
 }
 
 - (void)_updateAdaptiveColors
 {
 	%orig;
-	SBIconBadgeView *badgeView = (SBIconBadgeView *)MSHookIvar<UIView *>(self, "_accessoryView");
-	if ([badgeView respondsToSelector:@selector(setWallpaperRelativeCenter:)])
-		[badgeView setWallpaperRelativeCenter:badgePointCorrection(self)];
+	setBadgePosition(self, self.wallpaperRelativeImageCenter);
 }
 
 %end
 
 %hook SBIconBadgeView
 
-- (void)configureForIcon:(SBIcon *)icon location:(int)location highlighted:(BOOL)highlighted
-{
-	%orig;
-	bbHook(self, icon, location, highlighted);
-}
-
-- (void)configureAnimatedForIcon:(SBIcon *)icon location:(int)location highlighted:(BOOL)highlighted withPreparation:(id)preparation animation:(id)animation completion:(id)completion
-{
-	%orig;
-	bbHook(self, icon, location, highlighted);
-}
-
 %new
 - (void)setWallpaperRelativeCenter:(CGPoint)point
 {
 	SBDarkeningImageView *bgView = MSHookIvar<SBDarkeningImageView *>(self, "_backgroundView");
 	[(SBIconBlurryBackgroundView *)[bgView viewWithTag:9596] setWallpaperRelativeCenter:point];
-}
-
-- (void)layoutSubviews
-{
-	%orig;
-	[self setWallpaperRelativeCenter:badgePointCorrection((SBIconView *)[self superview])];
 }
 
 - (id)init
