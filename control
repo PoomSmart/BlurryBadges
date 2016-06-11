@@ -2,7 +2,6 @@ Name: BlurryBadges
 Package: org.thebigboss.blurrybadges
 Author: PoomSmart
 Maintainer: BigBoss <bigboss@thebigboss.org>
-Conflicts: org.coolstar.classicbadges
 Depends: firmware (>= 7.0), mobilesubstrate, preferenceloader
 Section: Tweaks
 Version: 1.0

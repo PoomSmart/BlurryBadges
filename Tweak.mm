@@ -60,82 +60,65 @@ struct pixel {
     unsigned char r, g, b, a;
 };
 
-@interface UIImage (Addition)
-- (UIColor *)dominantColor;
-@end
-
-@interface UIColor (Addition)
-- (UIColor *)shiftColor:(CGFloat)shift;
-- (UIColor *)lighterColor;
-- (UIColor *)darkerColor;
-@end
-
-@implementation UIImage (Addition)
- 
-- (UIColor *)dominantColor
+static UIColor *dominantColorFromIcon(SBIcon *icon)
 {
-    NSUInteger red = 0;
-    NSUInteger green = 0;
-    NSUInteger blue = 0;
-    struct pixel* pixels = (struct pixel*) calloc(1, self.size.width * self.size.height * sizeof(struct pixel));
-    if (pixels != nil)
+	UIImage *iconImage = [icon getIconImage:2];
+	NSUInteger red = 0;
+	NSUInteger green = 0;
+	NSUInteger blue = 0;
+	CGImageRef iconCGImage = iconImage.CGImage;
+	struct pixel *pixels = (struct pixel *)calloc(1, iconImage.size.width * iconImage.size.height * sizeof(struct pixel));
+	if (pixels != nil)
     {
-        CGContextRef context = CGBitmapContextCreate((void*) pixels, self.size.width, self.size.height, 8, self.size.width * 4, CGImageGetColorSpace(self.CGImage), kCGImageAlphaPremultipliedLast);
-        if (context != NULL)
-        {
-            CGContextDrawImage(context, CGRectMake(0.0f, 0.0f, self.size.width, self.size.height), self.CGImage);
-            NSUInteger numberOfPixels = self.size.width * self.size.height;
-            for (int i=0; i<numberOfPixels; i++) {
-                red += pixels[i].r;
-                green += pixels[i].g;
-                blue += pixels[i].b;
-            }
-            red /= numberOfPixels;
-            green /= numberOfPixels;
-            blue/= numberOfPixels;
-            CGContextRelease(context);
-        }
-        free(pixels);
-    }
-    return [UIColor colorWithRed:red/255.0f green:green/255.0f blue:blue/255.0f alpha:1.0f];
+		CGContextRef context = CGBitmapContextCreate((void *)pixels, iconImage.size.width, iconImage.size.height, 8, iconImage.size.width * 4, CGImageGetColorSpace(iconCGImage), kCGImageAlphaPremultipliedLast);
+		if (context != NULL) {
+			CGContextDrawImage(context, CGRectMake(0.0f, 0.0f, iconImage.size.width, iconImage.size.height), iconCGImage);
+			NSUInteger numberOfPixels = iconImage.size.width * iconImage.size.height;
+			for (int i = 0; i < numberOfPixels; i++) {
+				red += pixels[i].r;
+				green += pixels[i].g;
+				blue += pixels[i].b;
+			}
+			red /= numberOfPixels;
+			green /= numberOfPixels;
+			blue /= numberOfPixels;
+			CGContextRelease(context);
+		}
+		free(pixels);
+	}
+	return [UIColor colorWithRed:red/255.0f green:green/255.0f blue:blue/255.0f alpha:1.0f];
 }
- 
-@end
 
-@implementation UIColor (Addition)
-
-- (UIColor *)shiftColor:(CGFloat)shift
+static UIColor *colorShiftedBy(UIColor *color, CGFloat shift)
 {
 	CGFloat red, green, blue, alpha;
-	[self getRed:&red green:&green blue:&blue alpha:&alpha];
-	return [UIColor colorWithRed:red + shift green:green + shift blue:blue + shift alpha:alpha]; // red/blue shift? lol.
+	[color getRed:&red green:&green blue:&blue alpha:&alpha];
+	return [UIColor colorWithRed:red + shift green:green + shift blue:blue + shift alpha:alpha];
 }
 
-- (UIColor *)lighterColor
+static UIColor *lighterColor(UIColor *color)
 {
-	return [self shiftColor:0.25];
+	return colorShiftedBy(color, 0.25);
 }
 
-- (UIColor *)darkerColor
+static UIColor *darkerColor(UIColor *color)
 {
-	return [self shiftColor:-0.25];
+	return colorShiftedBy(color, -0.25);
 }
-
-@end
 
 static CGFloat borderSizeFromMode(int mode)
 {
 	switch (mode) {
 		case 0:
-			return 0;
+			return 0.0f;
 		case 1:
-			return 2;
+			return 2.0f;
 		case 2:
-			return 2.5;
+			return 2.5f;
 		case 3:
-			return 3;
+			return 3.0f;
 		case 4:
-			return 4;
+			return 4.0f;
 	}
 	return 0;
 }
@@ -153,9 +136,9 @@ static UIColor *borderColorFromMode(int mode, UIColor *color)
 {
 	switch (mode) {
 		case 0:
-			return [color lighterColor];
+			return lighterColor(color);
 		case 1:
-			return [color darkerColor];
+			return darkerColor(color);
 		case 2:
 			return [UIColor whiteColor];
 		case 3:
@@ -192,27 +175,23 @@ static UIImage *roundedRectMask(CGSize size)
 
 int borderColorMode = 2;
 int borderWidthMode = 3;
-CGFloat tintAlpha = 0.65;
+CGFloat tintAlpha = 0.65f;
 
 static void loadSettings()
 {
 	id r = [[NSUserDefaults standardUserDefaults] objectForKey:@"SBBadgeBorderColorMode"];
 	borderColorMode = r != nil ? [r intValue] : 2;
-	
 	id r2 = [[NSUserDefaults standardUserDefaults] objectForKey:@"SBBadgeBorderWidth"];
 	borderWidthMode = r2 != nil ? [r2 intValue] : 1;
-	
 	id r3 = [[NSUserDefaults standardUserDefaults] objectForKey:@"SBBadgeTintAlpha"];
-	tintAlpha = r3 != nil ? [r3 floatValue] : 0.65;
-
+	tintAlpha = r3 != nil ? [r3 floatValue] : 0.65f;
 }
 
 static void bbHook(SBIconBadgeView *self, SBIcon *icon, int location)
 {
-	UIImage *iconImage = [icon getIconImage:2];
-	UIColor *dominantColor = [iconImage dominantColor];
+	UIColor *dominantColor = dominantColorFromIcon(icon);
 	SBDarkeningImageView *bgView = MSHookIvar<SBDarkeningImageView *>(self, "_backgroundView");
-	CGRect frame = CGRectMake(1, 1, self.frame.size.width-2, self.frame.size.height-2);
+	CGRect frame = CGRectMake(1, 1, self.frame.size.width - 2, self.frame.size.height - 2);
 	CALayer *maskLayer = [CALayer layer];
 	maskLayer.frame = frame;
 	maskLayer.contents = (id)[roundedRectMask(frame.size) CGImage];
@@ -223,10 +202,10 @@ static void bbHook(SBIconBadgeView *self, SBIcon *icon, int location)
 		dominantColor = [wallpaperCont averageColorForVariant:1];
 		switch (borderColorMode) {
 			case 0:
-				borderColor = [dominantColor lighterColor];
+				borderColor = lighterColor(dominantColor);
 				break;
 			case 1:
-				borderColor = [dominantColor darkerColor];
+				borderColor = darkerColor(dominantColor);
 				break;
 		}
 	}
@@ -352,9 +331,8 @@ static void bbSettingsChanged(CFNotificationCenterRef center, void *observer, CF
 	SBIconController *cont = [%c(SBIconController) sharedInstance];
 	SBIconModel *model = [cont model];
 	NSArray *icons = [model leafIcons];
-	for (SBIcon *icon in icons) {
+	for (SBIcon *icon in icons)
 		[icon noteBadgeDidChange];
-	}
 }
 
 %ctor

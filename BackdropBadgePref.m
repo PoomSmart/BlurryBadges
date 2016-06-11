@@ -2,22 +2,14 @@
 #import <Preferences/PSListController.h>
 #import <Preferences/PSSpecifier.h>
 #import <Preferences/PSTableCell.h>
-#import "notify.h"
+#import <notify.h>
+#import "../PS.h"
 
 #define SB CFSTR("com.apple.springboard")
 #define BorderWidth CFSTR("SBBadgeBorderWidth")
 #define BorderColor CFSTR("SBBadgeBorderColorMode")
 #define BadgeTintAlpha CFSTR("SBBadgeTintAlpha")
-#define RowHeight 44
-
-@interface PSViewController ()
-@property (nonatomic, retain) PSSpecifier *specifier;
-- (void)setView:(id)view;
-@end
-
-@interface UIImage (Addition)
-+ (UIImage *)imageNamed:(NSString *)name inBundle:(NSBundle *)bundle;
-@end
+#define RowHeight 44.0f
 
 @interface BackdropBadgePrefController : PSViewController <UITableViewDataSource, UITableViewDelegate> {
 	int badgeBorderSize;
@@ -45,7 +37,7 @@ static int integerValueForKey(CFStringRef key, int defaultValue)
 static float floatValueForKey(CFStringRef key, float defaultValue)
 {
 	id r = [[[NSUserDefaults standardUserDefaults] persistentDomainForName:(NSString *)SB] objectForKey:(NSString *)key];
-	return r != nil ? [r floatValue] : defaultValue;
+	return r ? [r floatValue] : defaultValue;
 }
 
 @implementation BackdropBadgePrefController
@@ -101,11 +93,13 @@ static float floatValueForKey(CFStringRef key, float defaultValue)
 	if (section == [self numberOfSectionsInTableView:tableView]-1) {
 		UIView *footer2 = [[[UIView alloc] initWithFrame:CGRectMake(0, 0, 320, 90)] autorelease];
 		footer2.autoresizingMask = UIViewAutoresizingFlexibleWidth;
-		footer2.backgroundColor = [UIColor clearColor];
+		footer2.backgroundColor = UIColor.clearColor;
 
 		UILabel *lbl2 = [[UILabel alloc] initWithFrame:footer2.frame];
 		lbl2.backgroundColor = [UIColor clearColor];
-		lbl2.text = @"© 2013 - 2014 Thuchapol Unprasert\n(@PoomSmart)";
+		lbl2.text = @"© 2013 - 2016 Thatchapon Unprasert\n(@PoomSmart)";
+		lbl2.textColor = UIColor.systemGrayColor;
+		lbl2.font = [UIFont systemFontOfSize:14.0f];
 		lbl2.textAlignment = NSTextAlignmentCenter;
 		lbl2.lineBreakMode = NSLineBreakByWordWrapping;
 		lbl2.numberOfLines = 2;
@@ -170,7 +164,7 @@ static float floatValueForKey(CFStringRef key, float defaultValue)
 	if (indexPath.section <= 1) {
 		UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"selection"] ?: [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"selection"] autorelease];
 		cell.textLabel.textAlignment = NSTextAlignmentLeft;
-		[cell setBackgroundColor:[UIColor whiteColor]];
+		cell.backgroundColor = UIColor.whiteColor;
 		switch (indexPath.section) {
 			case 0:
 				switch (indexPath.row) {
@@ -201,7 +195,7 @@ static float floatValueForKey(CFStringRef key, float defaultValue)
 						break;
 					case 2:
 						cell.textLabel.text = @"White";
-						[cell setBackgroundColor:[UIColor colorWithRed:0.9 green:0.9 blue:0.9 alpha:1]];
+						cell.backgroundColor = [UIColor colorWithRed:0.9 green:0.9 blue:0.9 alpha:1];
 						break;
 					case 3:
 						cell.textLabel.text = @"Black";
@@ -221,7 +215,7 @@ static float floatValueForKey(CFStringRef key, float defaultValue)
 				value = badgeBorderColorMode;
 				break;
 		}
-		[[cell imageView] setImage:[self badgeForSizeMode:indexPath.section == 0 ? indexPath.row : 3 colorMode:indexPath.section == 1 ? indexPath.row : 3]];
+		cell.imageView.image = [self badgeForSizeMode:indexPath.section == 0 ? indexPath.row : 3 colorMode:indexPath.section == 1 ? indexPath.row : 3];
 		cell.accessoryType = (value == indexPath.row) ? UITableViewCellAccessoryCheckmark : UITableViewCellAccessoryNone;
 		return cell;
 	}
@@ -235,12 +229,12 @@ static float floatValueForKey(CFStringRef key, float defaultValue)
     	tintSlider.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleBottomMargin;
     	return cell;
 	}
-	else if (indexPath.section == [self numberOfSectionsInTableView:tableView]-1) {
+	else if (indexPath.section == [self numberOfSectionsInTableView:tableView] - 1) {
 		UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"info"] ?: [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"info"] autorelease];
 		cell.textLabel.text = indexPath.row == 0 ? @"💰 Donate 💰" : @"Developer's Twitter";
 		cell.textLabel.font = [UIFont boldSystemFontOfSize:17];
 		cell.textLabel.textAlignment = NSTextAlignmentCenter;
-		[[cell imageView] setImage:indexPath.row == 1 ? [UIImage imageNamed:@"twitter" inBundle:[self bundle]] : nil];
+		cell.imageView.image = indexPath.row == 1 ? [UIImage imageNamed:@"twitter" inBundle:[self bundle]] : nil;
 		return cell;
 	}
 	return nil;
@@ -264,18 +258,17 @@ static float floatValueForKey(CFStringRef key, float defaultValue)
 		case 3:
 			switch (value) {
 				case 0:
-					[[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=GBQGZL8EFMM86"]];
+					[[UIApplication sharedApplication] openURL:[NSURL URLWithString:PS_DONATE_URL]];
 					break;
 				case 1:
-					[[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"twitter://user?screen_name=PoomSmart"]];
+					[[UIApplication sharedApplication] openURL:[NSURL URLWithString:PS_TWITTER_URL]];
 					break;
 			}
 			break;
 	}
 	if (section <= 1) {
-		for (NSInteger i = 0; i <= 4; i++) {
+		for (NSInteger i = 0; i <= 4; i++)
 			[tableView cellForRowAtIndexPath:[NSIndexPath indexPathForRow:i inSection:section]].accessoryType = (value == i) ? UITableViewCellAccessoryCheckmark : UITableViewCellAccessoryNone;
-		}
 		CFPreferencesSetAppValue(key, (CFTypeRef)@(value), SB);
 		CFPreferencesAppSynchronize(SB);
 		notify_post("com.ps.backdropbadge.update");
