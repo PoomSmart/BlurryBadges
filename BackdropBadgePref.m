@@ -97,7 +97,7 @@ static float floatValueForKey(CFStringRef key, float defaultValue)
 
 		UILabel *lbl2 = [[UILabel alloc] initWithFrame:footer2.frame];
 		lbl2.backgroundColor = [UIColor clearColor];
-		lbl2.text = @"© 2013 - 2016 Thatchapon Unprasert\n(@PoomSmart)";
+		lbl2.text = @"© 2013 - 2017 Thatchapon Unprasert\n(@PoomSmart)";
 		lbl2.textColor = UIColor.systemGrayColor;
 		lbl2.font = [UIFont systemFontOfSize:14.0f];
 		lbl2.textAlignment = NSTextAlignmentCenter;

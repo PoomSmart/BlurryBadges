@@ -1,15 +1,16 @@
 #import <UIKit/UIKit.h>
 #import <QuartzCore/QuartzCore.h>
 #import <notify.h>
+#import <substrate.h>
 
 @interface SBWallpaperController : NSObject
 + (id)sharedInstance;
-- (int)variant;
-- (UIColor *)averageColorForVariant:(int)variant;
+- (NSInteger)variant;
+- (UIColor *)averageColorForVariant:(NSInteger)variant;
 @end
 
 @interface SBIcon : NSObject
-- (UIImage *)getIconImage:(int)type;
+- (UIImage *)getIconImage:(NSInteger)type;
 - (BOOL)isFolderIcon;
 - (void)noteBadgeDidChange;
 @end
@@ -125,9 +126,9 @@ static CGFloat borderSizeFromMode(int mode)
 
 static UIColor *randomColor()
 {
-	CGFloat hue = (arc4random()%256/256.0);
-	CGFloat saturation = (arc4random()%256/256.0);
-	CGFloat brightness = (arc4random()%256/256.0);
+	CGFloat hue = (arc4random() % 256 / 256.0);
+	CGFloat saturation = (arc4random() % 256 / 256.0);
+	CGFloat brightness = (arc4random() % 256 / 256.0);
 	UIColor *color = [UIColor colorWithHue:hue saturation:saturation brightness:brightness alpha:1];
 	return color;
 }
@@ -195,7 +196,7 @@ static void bbHook(SBIconBadgeView *self, SBIcon *icon, int location)
 	CALayer *maskLayer = [CALayer layer];
 	maskLayer.frame = frame;
 	maskLayer.contents = (id)[roundedRectMask(frame.size) CGImage];
-	
+
 	UIColor *borderColor = borderColorFromMode(borderColorMode, dominantColor);
 	if ([icon isFolderIcon]) {
 		SBWallpaperController *wallpaperCont = [%c(SBWallpaperController) sharedInstance];
@@ -304,23 +305,29 @@ static void setBadgePosition(SBIconView *iconView, CGPoint center)
 	if (self) {
 		loadSettings();
 		SBDarkeningImageView *bgView = MSHookIvar<SBDarkeningImageView *>(self, "_backgroundView");
-		[bgView setImage:nil];
+		bgView.image = nil;
 		CGRect defaultFrame = CGRectMake(0, 0, 24, 24);
 		SBIconBlurryBackgroundView *blurView = [[%c(SBIconBlurryBackgroundView) alloc] initWithFrame:defaultFrame];
 		blurView.tag = 9596;
 		UIView *tintView = [[UIView alloc] initWithFrame:defaultFrame];
 		tintView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
 		tintView.tag = 9597;
-		
+
 		blurView.layer.cornerRadius = 12;
 		blurView.layer.masksToBounds = YES;
-		
+
 		[blurView addSubview:tintView];
 		[tintView release];
 		[bgView insertSubview:blurView belowSubview:MSHookIvar<SBDarkeningImageView *>(self, "_textView")];
 		[blurView release];
 	}
 	return self;
+}
+
+- (void)prepareForReuse
+{
+	%orig;
+	MSHookIvar<SBDarkeningImageView *>(self, "_backgroundView").image = nil;
 }
 
 %end
@@ -339,5 +346,6 @@ static void bbSettingsChanged(CFNotificationCenterRef center, void *observer, CF
 {
 	loadSettings();
 	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, bbSettingsChanged, CFSTR("com.ps.backdropbadge.update"), NULL, CFNotificationSuspensionBehaviorCoalesce);
+	dlopen("/Library/MobileSubstrate/DynamicLibraries/Anemone.dylib", RTLD_LAZY);
 	%init;
 }
