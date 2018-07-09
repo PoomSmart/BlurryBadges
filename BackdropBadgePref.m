@@ -1,4 +1,6 @@
-#import <UIKit/UIKit.h>
+#define UIFUNCTIONS_NOT_C
+#import <UIKit/UIColor+Private.h>
+#import <UIKit/UIImage+Private.h>
 #import <Preferences/PSListController.h>
 #import <Preferences/PSSpecifier.h>
 #import <Preferences/PSTableCell.h>
@@ -18,32 +20,28 @@
 @property(nonatomic, retain) UISlider *slider;
 @end
 
-static int integerValueForKey(CFStringRef key, int defaultValue)
-{
+static int integerValueForKey(CFStringRef key, int defaultValue) {
 	CFPreferencesAppSynchronize(SB);
 	Boolean valid;
 	CFIndex value = CFPreferencesGetAppIntegerValue(key, SB, &valid);
 	return valid ? value : defaultValue;
 }
 
-/*static BOOL boolValueForKey(CFStringRef key, BOOL defaultValue)
-{
+/*static BOOL boolValueForKey(CFStringRef key, BOOL defaultValue) {
 	CFPreferencesAppSynchronize(SB);
 	Boolean valid;
 	CFIndex value = CFPreferencesGetAppBooleanValue(key, SB, &valid);
 	return valid ? value : defaultValue;
 }*/
 
-static float floatValueForKey(CFStringRef key, float defaultValue)
-{
+static float floatValueForKey(CFStringRef key, float defaultValue) {
 	id r = [[[NSUserDefaults standardUserDefaults] persistentDomainForName:(NSString *)SB] objectForKey:(NSString *)key];
 	return r ? [r floatValue] : defaultValue;
 }
 
 @implementation BackdropBadgePrefController
 
-- (void)loadView
-{
+- (void)loadView {
 	UITableView *tableView = [[UITableView alloc] initWithFrame:CGRectZero style:UITableViewStyleGrouped];
 	tableView.dataSource = self;
 	tableView.delegate = self;
@@ -52,8 +50,7 @@ static float floatValueForKey(CFStringRef key, float defaultValue)
 	[tableView release];
 }
 
-- (void)setSpecifier:(PSSpecifier *)specifier
-{
+- (void)setSpecifier:(PSSpecifier *)specifier {
 	[super setSpecifier:specifier];
 	self.navigationItem.title = [specifier name];
 	badgeBorderSize = integerValueForKey(BorderWidth, 3);
@@ -64,18 +61,15 @@ static float floatValueForKey(CFStringRef key, float defaultValue)
 	}
 }
 
-- (UITableViewCellEditingStyle)tableView:(UITableView *)tableView editingStyleForRowAtIndexPath:(NSIndexPath *)indexPath
-{
+- (UITableViewCellEditingStyle)tableView:(UITableView *)tableView editingStyleForRowAtIndexPath:(NSIndexPath *)indexPath {
 	return UITableViewCellEditingStyleNone;
 }
 
-- (NSInteger)numberOfSectionsInTableView:(UITableView *)table
-{
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)table {
 	return 4;
 }
 
-- (NSString *)tableView:(UITableView *)table titleForHeaderInSection:(NSInteger)section
-{
+- (NSString *)tableView:(UITableView *)table titleForHeaderInSection:(NSInteger)section {
 	switch (section) {
 		case 0:
 			return @"Border Size";
@@ -88,8 +82,7 @@ static float floatValueForKey(CFStringRef key, float defaultValue)
 	}
 }
 
-- (UIView *)tableView:(UITableView *)tableView viewForFooterInSection:(NSInteger)section
-{
+- (UIView *)tableView:(UITableView *)tableView viewForFooterInSection:(NSInteger)section {
 	if (section == [self numberOfSectionsInTableView:tableView]-1) {
 		UIView *footer2 = [[[UIView alloc] initWithFrame:CGRectMake(0, 0, 320, 90)] autorelease];
 		footer2.autoresizingMask = UIViewAutoresizingFlexibleWidth;
@@ -112,13 +105,11 @@ static float floatValueForKey(CFStringRef key, float defaultValue)
 }
 
 
-- (CGFloat)tableView:(UITableView *)tableView heightForFooterInSection:(NSInteger)section
-{
+- (CGFloat)tableView:(UITableView *)tableView heightForFooterInSection:(NSInteger)section {
     return section == [self numberOfSectionsInTableView:tableView]-1 ? 100 : 0;
 }
 
-- (NSInteger)tableView:(UITableView *)table numberOfRowsInSection:(NSInteger)section
-{
+- (NSInteger)tableView:(UITableView *)table numberOfRowsInSection:(NSInteger)section {
 	if (section <= 1)
 		return 5;
 	if (section == [self numberOfSectionsInTableView:table]-1)
@@ -128,26 +119,22 @@ static float floatValueForKey(CFStringRef key, float defaultValue)
 	return 0;
 }
 
-- (NSBundle *)bundle
-{
+- (NSBundle *)bundle {
 	return [NSBundle bundleWithPath:@"/Library/PreferenceBundles/BackdropBadgePref.bundle"];
 }
 
-- (UIImage *)badgeForSizeMode:(int)size colorMode:(int)color
-{
+- (UIImage *)badgeForSizeMode:(int)size colorMode:(int)color {
 	UIImage *badge = [UIImage imageNamed:[NSString stringWithFormat:@"badge%d%d", size, color] inBundle:[self bundle]];
 	return badge;
 }
 
-- (void)sliderValueChanged:(UISlider *)sender
-{
+- (void)sliderValueChanged:(UISlider *)sender {
 	CFPreferencesSetAppValue(BadgeTintAlpha, (CFTypeRef)@(sender.value), SB);
 	CFPreferencesAppSynchronize(SB);
 	//notify_post("com.ps.backdropbadge.update");
 }
 
-- (UISlider *)badgeTintAlphaSlider
-{
+- (UISlider *)badgeTintAlphaSlider {
 	if (self.slider == nil) {
 		self.slider = [[[UISlider alloc] init] autorelease];
 		self.slider.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
@@ -159,8 +146,7 @@ static float floatValueForKey(CFStringRef key, float defaultValue)
 	return self.slider;
 }
 
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
-{
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
 	if (indexPath.section <= 1) {
 		UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"selection"] ?: [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"selection"] autorelease];
 		cell.textLabel.textAlignment = NSTextAlignmentLeft;
@@ -240,8 +226,7 @@ static float floatValueForKey(CFStringRef key, float defaultValue)
 	return nil;
 }
 
-- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
-{
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
 	[tableView deselectRowAtIndexPath:indexPath animated:YES];
 	NSInteger section = indexPath.section;
 	NSInteger value = indexPath.row;
@@ -275,13 +260,11 @@ static float floatValueForKey(CFStringRef key, float defaultValue)
 	}
 }
 
-- (id)table
-{
+- (id)table {
 	return nil;
 }
 
-- (void)suspend
-{
+- (void)suspend {
 	notify_post("com.ps.backdropbadge.update");
 	[super suspend];
 }
