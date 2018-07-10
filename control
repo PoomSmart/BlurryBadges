@@ -1,10 +1,10 @@
 Name: BlurryBadges
-Package: org.thebigboss.blurrybadges
-Author: PoomSmart
-Maintainer: BigBoss <bigboss@thebigboss.org>
+Package: com.spicat.blurrybadges
+Conflicts: org.thebigboss.blurrybadges
+Author: SpicaT
+Maintainer: SpicaT
 Depends: firmware (>= 7.0), mobilesubstrate, preferenceloader
 Section: Tweaks
 Version: 1.0
 Architecture: iphoneos-arm
 Description: Add customizable blur to SpringBoard icon badges.
-Icon: file:///Library/PreferenceBundles/BackdropBadgePref.bundle/BackdropBadgePref@2x.png

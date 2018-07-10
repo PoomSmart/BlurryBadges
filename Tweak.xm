@@ -4,7 +4,7 @@
 #import <substrate.h>
 
 @interface SBWallpaperController : NSObject
-+ (id)sharedInstance;
++ (instancetype)sharedInstance;
 - (NSInteger)variant;
 - (UIColor *)averageColorForVariant:(NSInteger)variant;
 @end
@@ -35,7 +35,7 @@
 @end
 
 @interface SBIconController : NSObject
-+ (id)sharedInstance;
++ (instancetype)sharedInstance;
 - (SBIconModel *)model;
 @end
 
@@ -168,8 +168,7 @@ int borderColorMode = 2;
 int borderWidthMode = 3;
 CGFloat tintAlpha = 0.65f;
 
-static void loadSettings()
-{
+static void loadSettings() {
 	id r = [[NSUserDefaults standardUserDefaults] objectForKey:@"SBBadgeBorderColorMode"];
 	borderColorMode = r != nil ? [r intValue] : 2;
 	id r2 = [[NSUserDefaults standardUserDefaults] objectForKey:@"SBBadgeBorderWidth"];
@@ -233,16 +232,17 @@ static void setBadgePosition(SBIconView *iconView, CGPoint center) {
 	SBIconBadgeView *badgeView = (SBIconBadgeView *)[iconView valueForKey:@"_accessoryView"];
 	if (badgeView == nil)
 		return;
-	SBDarkeningImageView *bgView = (SBDarkeningImageView *)[badgeView valueForKey:@"_backgroundView"];
-	UIView *blurView = [bgView viewWithTag:9596];
-	CGRect visibleImageRect = MSHookIvar<CGRect>(iconView, "_visibleImageRect");
-	CGRect visibleImageFrame = UIRectCenteredAboutPoint(visibleImageRect, center, visibleImageRect.size.width, visibleImageRect.size.height);
-	CGPoint closeBoxCenter = visibleImageFrame.origin;
-	CGPoint wallpaperRelativeBadgeCenter = CGPointMake(closeBoxCenter.x + visibleImageRect.size.width - 0.5*blurView.frame.size.width + 10, closeBoxCenter.y);
-	if (CGPointEqualToPoint(wallpaperRelativeBadgeCenter, CGPointZero))
-		return;
-	if ([badgeView respondsToSelector:@selector(displayingAccessory)])
+	if ([badgeView respondsToSelector:@selector(displayingAccessory)] && [badgeView respondsToSelector:@selector(setWallpaperRelativeCenter:)]) {
+		SBDarkeningImageView *bgView = (SBDarkeningImageView *)[badgeView valueForKey:@"_backgroundView"];
+		UIView *blurView = [bgView viewWithTag:9596];
+		CGRect visibleImageRect = MSHookIvar<CGRect>(iconView, "_visibleImageRect");
+		CGRect visibleImageFrame = UIRectCenteredAboutPoint(visibleImageRect, center, visibleImageRect.size.width, visibleImageRect.size.height);
+		CGPoint closeBoxCenter = visibleImageFrame.origin;
+		CGPoint wallpaperRelativeBadgeCenter = CGPointMake(closeBoxCenter.x + visibleImageRect.size.width - 0.5*blurView.frame.size.width + 10, closeBoxCenter.y);
+		if (CGPointEqualToPoint(wallpaperRelativeBadgeCenter, CGPointZero))
+			return;
 		[badgeView setWallpaperRelativeCenter:wallpaperRelativeBadgeCenter];
+	}
 }
 
 - (void)setWallpaperRelativeImageCenter:(CGPoint)center {
