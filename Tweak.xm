@@ -1,61 +1,5 @@
-#import <UIKit/UIKit.h>
-#import <QuartzCore/QuartzCore.h>
 #import <notify.h>
-#import <substrate.h>
-
-@interface SBWallpaperController : NSObject
-+ (instancetype)sharedInstance;
-- (NSInteger)variant;
-- (UIColor *)averageColorForVariant:(NSInteger)variant;
-@end
-
-@interface SBIcon : NSObject
-- (UIImage *)getIconImage:(NSInteger)type;
-- (BOOL)isFolderIcon;
-- (void)noteBadgeDidChange;
-@end
-
-@interface SBIconImageView : UIView
-@end
-
-@interface SBIconView : UIView {
-	CGPoint _wallpaperRelativeCloseBoxCenter;
-	CGRect _visibleImageRect;
-}
-+ (CGSize)defaultIconImageSize;
-@property(assign, nonatomic) CGPoint wallpaperRelativeImageCenter;
-- (int)location;
-- (CGPoint)_centerForCloseBoxRelativeToVisibleImageFrame:(CGRect)visibleImageFrame;
-- (SBIcon *)icon;
-- (SBIconImageView *)_iconImageView;
-@end
-
-@interface SBIconModel : NSObject
-- (NSArray *)leafIcons;
-@end
-
-@interface SBIconController : NSObject
-+ (instancetype)sharedInstance;
-- (SBIconModel *)model;
-@end
-
-@interface SBFolderIconView : SBIconView
-@end
-
-@interface SBIconBadgeView : UIView
-- (BOOL)displayingAccessory;
-- (void)setWallpaperRelativeCenter:(CGPoint)center;
-@end
-
-@interface SBIconBlurryBackgroundView : UIView
-- (void)setWallpaperRelativeCenter:(CGPoint)center;
-@end
-
-@interface SBIconAccessoryImage : UIImage
-@end
-
-@interface SBDarkeningImageView : UIImageView
-@end
+#import "Header.h"
 
 struct pixel {
     unsigned char r, g, b, a;
@@ -71,9 +15,9 @@ static UIColor *dominantColorFromIcon(SBIcon *icon) {
 	if (pixels != nil)     {
 		CGContextRef context = CGBitmapContextCreate((void *)pixels, iconImage.size.width, iconImage.size.height, 8, iconImage.size.width * 4, CGImageGetColorSpace(iconCGImage), kCGImageAlphaPremultipliedLast);
 		if (context != NULL) {
-			CGContextDrawImage(context, CGRectMake(0.0f, 0.0f, iconImage.size.width, iconImage.size.height), iconCGImage);
+			CGContextDrawImage(context, CGRectMake(0.0, 0.0, iconImage.size.width, iconImage.size.height), iconCGImage);
 			NSUInteger numberOfPixels = iconImage.size.width * iconImage.size.height;
-			for (int i = 0; i < numberOfPixels; i++) {
+			for (int i = 0; i < numberOfPixels; ++i) {
 				red += pixels[i].r;
 				green += pixels[i].g;
 				blue += pixels[i].b;
@@ -85,7 +29,7 @@ static UIColor *dominantColorFromIcon(SBIcon *icon) {
 		}
 		free(pixels);
 	}
-	return [UIColor colorWithRed:red/255.0f green:green/255.0f blue:blue/255.0f alpha:1.0f];
+	return [UIColor colorWithRed:red/255.0 green:green/255.0 blue:blue/255.0 alpha:1.0];
 }
 
 static UIColor *colorShiftedBy(UIColor *color, CGFloat shift) {
@@ -152,7 +96,7 @@ static UIColor *borderColorFromMode(int mode, UIColor *color) {
 %end
 
 static UIImage *roundedRectMask(CGSize size) {
-	CGFloat realCornerRadius = size.height/2;
+	CGFloat realCornerRadius = size.height / 2;
 	CGRect rect = CGRectMake(0.0, 0.0, size.width, size.height);
 	UIGraphicsBeginImageContextWithOptions(size, NO, 0);
 	CGContextRef context = UIGraphicsGetCurrentContext();
@@ -166,7 +110,7 @@ static UIImage *roundedRectMask(CGSize size) {
 
 int borderColorMode = 2;
 int borderWidthMode = 3;
-CGFloat tintAlpha = 0.65f;
+CGFloat tintAlpha = 0.65;
 
 static void loadSettings() {
 	id r = [[NSUserDefaults standardUserDefaults] objectForKey:@"SBBadgeBorderColorMode"];
@@ -174,27 +118,28 @@ static void loadSettings() {
 	id r2 = [[NSUserDefaults standardUserDefaults] objectForKey:@"SBBadgeBorderWidth"];
 	borderWidthMode = r2 != nil ? [r2 intValue] : 1;
 	id r3 = [[NSUserDefaults standardUserDefaults] objectForKey:@"SBBadgeTintAlpha"];
-	tintAlpha = r3 != nil ? [r3 floatValue] : 0.65f;
+	tintAlpha = r3 != nil ? [r3 floatValue] : 0.65;
 }
 
 static void bbHook(SBIconBadgeView *self, SBIcon *icon, int location) {
-	UIColor *dominantColor = dominantColorFromIcon(icon);
+    if (self.dominantColor == nil)
+	    self.dominantColor = dominantColorFromIcon(icon);
 	SBDarkeningImageView *bgView = (SBDarkeningImageView *)[self valueForKey:@"_backgroundView"];
 	CGRect frame = CGRectMake(1, 1, self.frame.size.width - 2, self.frame.size.height - 2);
 	CALayer *maskLayer = [CALayer layer];
 	maskLayer.frame = frame;
 	maskLayer.contents = (id)[roundedRectMask(frame.size) CGImage];
 
-	UIColor *borderColor = borderColorFromMode(borderColorMode, dominantColor);
+	UIColor *borderColor = borderColorFromMode(borderColorMode, self.dominantColor);
 	if ([icon isFolderIcon]) {
 		SBWallpaperController *wallpaperCont = [%c(SBWallpaperController) sharedInstance];
-		dominantColor = [wallpaperCont averageColorForVariant:1];
+		self.dominantColor = [wallpaperCont averageColorForVariant:1];
 		switch (borderColorMode) {
 			case 0:
-				borderColor = lighterColor(dominantColor);
+				borderColor = lighterColor(self.dominantColor);
 				break;
 			case 1:
-				borderColor = darkerColor(dominantColor);
+				borderColor = darkerColor(self.dominantColor);
 				break;
 		}
 	}
@@ -208,7 +153,7 @@ static void bbHook(SBIconBadgeView *self, SBIcon *icon, int location) {
 	blurView.layer.borderWidth = borderWidth;
 
 	UIView *tint = [blurView viewWithTag:9597];
-	[tint setBackgroundColor:dominantColor];
+	tint.backgroundColor = self.dominantColor;
 	tint.alpha = tintAlpha;
 }
 
@@ -274,6 +219,8 @@ static void setBadgePosition(SBIconView *iconView, CGPoint center) {
 
 %hook SBIconBadgeView
 
+%property(retain, nonatomic) UIColor *dominantColor;
+
 %new
 - (void)setWallpaperRelativeCenter:(CGPoint)point {
 	SBDarkeningImageView *bgView = (SBDarkeningImageView *)[self valueForKey:@"_backgroundView"];
@@ -308,6 +255,7 @@ static void setBadgePosition(SBIconView *iconView, CGPoint center) {
 	%orig;
 	SBDarkeningImageView *bgView = (SBDarkeningImageView *)[self valueForKey:@"_backgroundView"];
 	bgView.image = nil;
+    self.dominantColor = nil;
 }
 
 %end
