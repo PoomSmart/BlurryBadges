@@ -49,6 +49,13 @@
 @property(retain, nonatomic) UIColor *dominantColor;
 @end
 
+@interface SBIconContinuityBadgeView : UIView
+@end
+
+@interface SBIconContinuityBadgeView (BlurryBadges)
+@property(retain, nonatomic) UIColor *dominantColor;
+@end
+
 @interface SBIconBlurryBackgroundView : UIView
 - (void)setWallpaperRelativeCenter:(CGPoint)center;
 @end

@@ -217,6 +217,32 @@ static void setBadgePosition(SBIconView *iconView, CGPoint center) {
 
 %end
 
+static void initBadgeView(UIView *self) {
+	if (self == nil)
+		return;
+	SBDarkeningImageView *bgView = (SBDarkeningImageView *)[self valueForKey:@"_backgroundView"];
+	bgView.image = nil;
+	CGRect defaultFrame = CGRectMake(0, 0, 24, 24);
+	SBIconBlurryBackgroundView *blurView = [[%c(SBIconBlurryBackgroundView) alloc] initWithFrame:defaultFrame];
+	blurView.tag = 9596;
+	UIView *tintView = [[UIView alloc] initWithFrame:defaultFrame];
+	tintView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+	tintView.tag = 9597;
+
+	blurView.layer.cornerRadius = 12;
+	blurView.layer.masksToBounds = YES;
+
+	[blurView addSubview:tintView];
+	[tintView release];
+	UIView *textView = nil;
+    object_getInstanceVariable(self, "_textView", (void **)&textView);
+	if (textView)
+		[bgView insertSubview:blurView belowSubview:textView];
+	else
+		[bgView addSubview:blurView];
+	[blurView release];
+}
+
 %hook SBIconBadgeView
 
 %property(retain, nonatomic) UIColor *dominantColor;
@@ -229,25 +255,26 @@ static void setBadgePosition(SBIconView *iconView, CGPoint center) {
 
 - (id)init {
 	self = %orig;
-	if (self) {
-		loadSettings();
-		SBDarkeningImageView *bgView = (SBDarkeningImageView *)[self valueForKey:@"_backgroundView"];
-		bgView.image = nil;
-		CGRect defaultFrame = CGRectMake(0, 0, 24, 24);
-		SBIconBlurryBackgroundView *blurView = [[%c(SBIconBlurryBackgroundView) alloc] initWithFrame:defaultFrame];
-		blurView.tag = 9596;
-		UIView *tintView = [[UIView alloc] initWithFrame:defaultFrame];
-		tintView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-		tintView.tag = 9597;
+	initBadgeView(self);
+	return self;
+}
 
-		blurView.layer.cornerRadius = 12;
-		blurView.layer.masksToBounds = YES;
+- (void)prepareForReuse {
+	%orig;
+	SBDarkeningImageView *bgView = (SBDarkeningImageView *)[self valueForKey:@"_backgroundView"];
+	bgView.image = nil;
+    self.dominantColor = nil;
+}
 
-		[blurView addSubview:tintView];
-		[tintView release];
-		[bgView insertSubview:blurView belowSubview:MSHookIvar<SBDarkeningImageView *>(self, "_textView")];
-		[blurView release];
-	}
+%end
+
+%hook SBIconContinuityBadgeView
+
+%property(retain, nonatomic) UIColor *dominantColor;
+
+- (id)init {
+	self = %orig;
+	initBadgeView(self);
 	return self;
 }
 
