@@ -7,9 +7,7 @@ struct pixel {
 
 static UIColor *dominantColorFromIcon(SBIcon *icon) {
 	UIImage *iconImage = [icon getIconImage:2];
-	NSUInteger red = 0;
-	NSUInteger green = 0;
-	NSUInteger blue = 0;
+	NSUInteger red = 0, green = 0, blue = 0;
 	CGImageRef iconCGImage = iconImage.CGImage;
 	struct pixel *pixels = (struct pixel *)calloc(1, iconImage.size.width * iconImage.size.height * sizeof(struct pixel));
 	if (pixels != nil)     {
@@ -129,7 +127,6 @@ static void bbHook(SBIconBadgeView *self, SBIcon *icon, int location) {
 	CALayer *maskLayer = [CALayer layer];
 	maskLayer.frame = frame;
 	maskLayer.contents = (id)[roundedRectMask(frame.size) CGImage];
-
 	UIColor *borderColor = borderColorFromMode(borderColorMode, self.dominantColor);
 	if ([icon isFolderIcon]) {
 		SBWallpaperController *wallpaperCont = [%c(SBWallpaperController) sharedInstance];
@@ -143,9 +140,7 @@ static void bbHook(SBIconBadgeView *self, SBIcon *icon, int location) {
 				break;
 		}
 	}
-
 	CGFloat borderWidth = borderSizeFromMode(borderWidthMode);
-
 	SBIconBlurryBackgroundView *blurView = (SBIconBlurryBackgroundView *)[bgView viewWithTag:9596];
 	blurView.frame = CGRectMake(0, 0, self.frame.size.width, self.frame.size.height);
 	blurView.layer.mask = maskLayer;
@@ -228,10 +223,8 @@ static void initBadgeView(UIView *self) {
 	UIView *tintView = [[UIView alloc] initWithFrame:defaultFrame];
 	tintView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
 	tintView.tag = 9597;
-
 	blurView.layer.cornerRadius = 12;
 	blurView.layer.masksToBounds = YES;
-
 	[blurView addSubview:tintView];
 	[tintView release];
 	UIView *textView = nil;

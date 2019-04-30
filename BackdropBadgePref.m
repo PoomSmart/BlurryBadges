@@ -1,4 +1,3 @@
-#define UIFUNCTIONS_NOT_C
 #import <UIKit/UIColor+Private.h>
 #import <UIKit/UIImage+Private.h>
 #import <Preferences/PSListController.h>
@@ -83,7 +82,7 @@ static float floatValueForKey(CFStringRef key, float defaultValue) {
 
 		UILabel *lbl2 = [[UILabel alloc] initWithFrame:footer2.frame];
 		lbl2.backgroundColor = [UIColor clearColor];
-		lbl2.text = @"© 2013 - 2017 PoomSmart\n© 2018 Spica T";
+		lbl2.text = @"© 2013 - 2017 PoomSmart\n© 2018 - 2019 Spica T";
 		lbl2.textColor = UIColor.systemGrayColor;
 		lbl2.font = [UIFont systemFontOfSize:14.0];
 		lbl2.textAlignment = NSTextAlignmentCenter;
