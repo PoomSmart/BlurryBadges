@@ -1,6 +1,12 @@
 #import <UIKit/UIKit.h>
 #import <QuartzCore/QuartzCore.h>
 
+typedef struct SBIconImageInfo {
+	CGSize size;
+	CGFloat scale;
+	CGFloat continuousCornerRadius;
+} SBIconImageInfo;
+
 @interface SBWallpaperController : NSObject
 + (instancetype)sharedInstance;
 - (NSInteger)variant;
@@ -8,7 +14,8 @@
 @end
 
 @interface SBIcon : NSObject
-- (UIImage *)getIconImage:(NSInteger)type;
+- (UIImage *)getIconImage:(NSInteger)type; // iOS < 13
+- (UIImage *)generateIconImageWithInfo:(SBIconImageInfo)imageInfo; // iOS 13+
 - (BOOL)isFolderIcon;
 - (void)noteBadgeDidChange;
 @end

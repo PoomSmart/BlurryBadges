@@ -6,7 +6,13 @@ struct pixel {
 };
 
 static UIColor *dominantColorFromIcon(SBIcon *icon) {
-	UIImage *iconImage = [icon getIconImage:2];
+	UIImage *iconImage = nil;
+	if ([icon respondsToSelector:@selector(generateIconImageWithInfo:)])
+		iconImage = [icon generateIconImageWithInfo:(SBIconImageInfo) { .size = CGSizeMake(60, 60), .scale = 1, .continuousCornerRadius = 12 }];
+	else if ([icon respondsToSelector:@selector(getIconImage:)])
+		iconImage = [icon getIconImage:2];
+	if (iconImage == nil)
+		return [UIColor blackColor];
 	NSUInteger red = 0, green = 0, blue = 0;
 	CGImageRef iconCGImage = iconImage.CGImage;
 	struct pixel *pixels = (struct pixel *)calloc(1, iconImage.size.width * iconImage.size.height * sizeof(struct pixel));
@@ -197,17 +203,20 @@ static void setBadgePosition(SBIconView *iconView, CGPoint center) {
 
 - (void)_applyEditingStateAnimated:(BOOL)animated {
 	%orig;
-	setBadgePosition(self, self.wallpaperRelativeImageCenter);
+	if ([self respondsToSelector:@selector(wallpaperRelativeImageCenter)])
+		setBadgePosition(self, self.wallpaperRelativeImageCenter);
 }
 
 - (void)layoutSubviews {
 	%orig;
-	setBadgePosition(self, self.wallpaperRelativeImageCenter);
+	if ([self respondsToSelector:@selector(wallpaperRelativeImageCenter)])
+		setBadgePosition(self, self.wallpaperRelativeImageCenter);
 }
 
 - (void)_updateAdaptiveColors {
 	%orig;
-	setBadgePosition(self, self.wallpaperRelativeImageCenter);
+	if ([self respondsToSelector:@selector(wallpaperRelativeImageCenter)])
+		setBadgePosition(self, self.wallpaperRelativeImageCenter);
 }
 
 %end
@@ -243,7 +252,9 @@ static void initBadgeView(UIView *self) {
 %new
 - (void)setWallpaperRelativeCenter:(CGPoint)point {
 	SBDarkeningImageView *bgView = (SBDarkeningImageView *)[self valueForKey:@"_backgroundView"];
-	[(SBIconBlurryBackgroundView *)[bgView viewWithTag:9596] setWallpaperRelativeCenter:point];
+	SBIconBlurryBackgroundView *view = (SBIconBlurryBackgroundView *)[bgView viewWithTag:9596];
+	if ([view respondsToSelector:@selector(setWallpaperRelativeCenter:)])
+		[view setWallpaperRelativeCenter:point];
 }
 
 - (id)init {
