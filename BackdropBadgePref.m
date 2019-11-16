@@ -138,7 +138,6 @@ static float floatValueForKey(CFStringRef key, float defaultValue) {
 	if (indexPath.section <= 1) {
 		UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"selection"] ?: [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"selection"] autorelease];
 		cell.textLabel.textAlignment = NSTextAlignmentLeft;
-		cell.backgroundColor = UIColor.whiteColor;
 		switch (indexPath.section) {
 			case 0:
 				switch (indexPath.row) {
@@ -169,7 +168,7 @@ static float floatValueForKey(CFStringRef key, float defaultValue) {
 						break;
 					case 2:
 						cell.textLabel.text = @"White";
-						cell.backgroundColor = [UIColor colorWithRed:0.9 green:0.9 blue:0.9 alpha:1];
+						cell.backgroundColor = [UIColor colorWithRed:0.8 green:0.8 blue:0.8 alpha:1];
 						break;
 					case 3:
 						cell.textLabel.text = @"Black";
@@ -232,7 +231,7 @@ static float floatValueForKey(CFStringRef key, float defaultValue) {
 			break;
 	}
 	if (section <= 1) {
-		for (NSInteger i = 0; i <= 4; i++)
+		for (NSInteger i = 0; i <= 4; ++i)
 			[tableView cellForRowAtIndexPath:[NSIndexPath indexPathForRow:i inSection:section]].accessoryType = (value == i) ? UITableViewCellAccessoryCheckmark : UITableViewCellAccessoryNone;
 		CFPreferencesSetAppValue(key, (CFTypeRef)@(value), SB);
 		CFPreferencesAppSynchronize(SB);
