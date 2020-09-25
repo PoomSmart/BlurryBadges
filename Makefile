@@ -1,16 +1,17 @@
-PACKAGE_VERSION = 1.1.1
+PACKAGE_VERSION = 1.2.4
 
 ifeq ($(SIMULATOR),1)
 	TARGET = simulator:clang:latest
 	ARCHS = x86_64 i386
 else
-	TARGET = iphone:11.2:7.0
+	TARGET = iphone:clang:11.2:7.0
+	ARCHS = armv7 arm64 arm64e
 endif
 
 include $(THEOS)/makefiles/common.mk
 TWEAK_NAME = BackdropBadge
 BackdropBadge_FILES = Tweak.xm
-BackdropBadge_FRAMEWORKS = CoreGraphics QuartzCore UIKit
+BackdropBadge_FRAMEWORKS = CoreGraphics QuartzCore
 BackdropBadg_USE_SUBSTRATE = 1
 
 include $(THEOS_MAKE_PATH)/tweak.mk
@@ -19,7 +20,6 @@ BUNDLE_NAME = BackdropBadgePref
 BackdropBadgePref_FILES = BackdropBadgePref.m
 BackdropBadgePref_INSTALL_PATH = /Library/PreferenceBundles
 BackdropBadgePref_PRIVATE_FRAMEWORKS = Preferences
-BackdropBadgePref_FRAMEWORKS = CoreGraphics UIKit
 
 include $(THEOS_MAKE_PATH)/bundle.mk
 

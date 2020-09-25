@@ -1,5 +1,2 @@
-obj
 .theos
-theos
-_
-*.deb
+packages/*
