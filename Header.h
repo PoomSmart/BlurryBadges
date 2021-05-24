@@ -1,11 +1,12 @@
 #import <UIKit/UIKit.h>
+#import <Foundation/Foundation.h>
 #import <QuartzCore/QuartzCore.h>
-
-typedef struct SBIconImageInfo {
-	CGSize size;
-	CGFloat scale;
-	CGFloat continuousCornerRadius;
-} SBIconImageInfo;
+#import <SpringBoard/SBIconModel.h>
+#import <SpringBoard/SBIcon.h>
+#import <SpringBoard/SBIconImageInfo.h>
+#import <SpringBoard/SBIconView.h>
+#import <SpringBoard/SBFolderIconView.h>
+#import <SpringBoard/SBIconController.h>
 
 @interface SBWallpaperController : NSObject
 + (instancetype)sharedInstance;
@@ -13,38 +14,22 @@ typedef struct SBIconImageInfo {
 - (UIColor *)averageColorForVariant:(NSInteger)variant;
 @end
 
-@interface SBIcon : NSObject
-- (UIImage *)getIconImage:(NSInteger)type; // iOS < 13
-- (UIImage *)generateIconImageWithInfo:(SBIconImageInfo)imageInfo; // iOS 13+
-- (BOOL)isFolderIcon;
+@interface SBIcon (Additions)
 - (void)noteBadgeDidChange;
 @end
 
 @interface SBIconImageView : UIView
 @end
 
-@interface SBIconView : UIView {
-	CGPoint _wallpaperRelativeCloseBoxCenter;
-	CGRect _visibleImageRect;
-}
+@interface SBIconView (Additions)
 + (CGSize)defaultIconImageSize;
 @property(assign, nonatomic) CGPoint wallpaperRelativeImageCenter;
-- (int)location;
 - (CGPoint)_centerForCloseBoxRelativeToVisibleImageFrame:(CGRect)visibleImageFrame;
-- (SBIcon *)icon;
 - (SBIconImageView *)_iconImageView;
 @end
 
-@interface SBIconModel : NSObject
+@interface SBIconModel (Additions)
 - (NSArray *)leafIcons;
-@end
-
-@interface SBIconController : NSObject
-+ (instancetype)sharedInstance;
-- (SBIconModel *)model;
-@end
-
-@interface SBFolderIconView : SBIconView
 @end
 
 @interface SBIconBadgeView : UIView
