@@ -57,3 +57,6 @@
 
 @interface SBDarkeningImageView : UIImageView
 @end
+
+@interface SBHIconAccessoryCountedMapImageTuple : NSObject
+@end

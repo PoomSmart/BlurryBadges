@@ -258,6 +258,12 @@ static void initBadgeView(UIView *self) {
     return self;
 }
 
+- (SBHIconAccessoryCountedMapImageTuple *)_checkoutBackgroundImageTuple {
+    SBHIconAccessoryCountedMapImageTuple *tuple = %orig;
+    [tuple setValue:nil forKey:@"_image"];
+    return tuple;
+}
+
 - (void)prepareForReuse {
     %orig;
     SBDarkeningImageView *bgView = (SBDarkeningImageView *)[self valueForKey:@"_backgroundView"];
