@@ -23,7 +23,7 @@
 
 @interface SBIconView (Additions)
 + (CGSize)defaultIconImageSize;
-@property(assign, nonatomic) CGPoint wallpaperRelativeImageCenter;
+@property (assign, nonatomic) CGPoint wallpaperRelativeImageCenter;
 - (CGPoint)_centerForCloseBoxRelativeToVisibleImageFrame:(CGRect)visibleImageFrame;
 - (SBIconImageView *)_iconImageView;
 @end

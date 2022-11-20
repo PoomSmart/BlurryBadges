@@ -1,4 +1,3 @@
-#import <UIKit/UIKit.h>
 #import <UIKit/UIColor+Private.h>
 #import <UIKit/UIImage+Private.h>
 #import <Preferences/PSListController.h>
@@ -7,19 +6,16 @@
 #import <notify.h>
 #import "../PS.h"
 
-@interface PSTableCell (Additions)
-- (void)setChecked:(BOOL)checked;
-@end
-
 #define SB CFSTR("com.apple.springboard")
 #define BorderWidth CFSTR("SBBadgeBorderWidth")
 #define BorderColor CFSTR("SBBadgeBorderColorMode")
-#define BadgeTintAlpha CFSTR("SBBadgeTintAlpha")
+#define BadgeTintOpacity CFSTR("SBBadgeTintOpacity")
 #define PostNotification CFSTR("com.ps.backdropbadge.update")
 
 @interface BackdropBadgePrefController : PSListController {
 	int badgeBorderSize;
 	int badgeBorderColorMode;
+	int badgeOpacity;
 }
 @end
 
@@ -38,6 +34,10 @@ static int integerValueForKey(CFStringRef key, int defaultValue) {
 
 - (NSArray *)borderColors {
 	return @[@"Lighter", @"Darker", @"White", @"Black", @"Random"];
+}
+
+- (NSArray *)opacitys {
+	return @[@"20%", @"40%", @"60%", @"80%", @"100%"];
 }
 
 - (NSMutableArray *)specifiers {
@@ -60,21 +60,17 @@ static int integerValueForKey(CFStringRef key, int defaultValue) {
             [_specifiers addObject:borderColorSpecifier];
 		}
 
-		PSSpecifier *badgeTintAlphaSpecifier = [PSSpecifier preferenceSpecifierNamed:@"Badge Tint Alpha (Disabled)" target:nil set:nil get:nil detail:nil cell:PSGroupCell edit:nil];
-        [_specifiers addObject:badgeTintAlphaSpecifier];
-		PSSpecifier *sliderSpecifier = [PSSpecifier preferenceSpecifierNamed:@"Slider" target:self set:@selector(setPreferenceValue:specifier:) get:@selector(readPreferenceValue:) detail:nil cell:PSSliderCell edit:nil];
-		[sliderSpecifier setProperty:@(0.0) forKey:@"min"];
-		[sliderSpecifier setProperty:@(1.0) forKey:@"max"];
-		[sliderSpecifier setProperty:@(0.65) forKey:@"default"];
-		[sliderSpecifier setProperty:@YES forKey:@"showValue"];
-		[sliderSpecifier setProperty:(__bridge NSString *)BadgeTintAlpha forKey:@"key"];
-		[sliderSpecifier setProperty:(__bridge NSString *)SB forKey:@"defauts"];
-		[sliderSpecifier setProperty:(__bridge NSString *)PostNotification forKey:@"PostNotification"];
-		// [sliderSpecifier setProperty:@YES forKey:@"enabled"]; // FIXME: make the slider works
-		[_specifiers addObject:sliderSpecifier];
+		PSSpecifier *badgeTintOpacitySpecifier = [PSSpecifier preferenceSpecifierNamed:@"Badge Tint Opacity" target:nil set:nil get:nil detail:nil cell:PSGroupCell edit:nil];
+        [_specifiers addObject:badgeTintOpacitySpecifier];
+		for (NSString *opacity in [self opacitys]) {
+			PSSpecifier *opacitySpecifier = [PSSpecifier preferenceSpecifierNamed:opacity target:nil set:nil get:nil detail:nil cell:PSStaticTextCell edit:nil];
+			[opacitySpecifier setProperty:@([[self opacitys] indexOfObject:opacity]) forKey:@"opacity"];
+			[opacitySpecifier setProperty:@YES forKey:@"enabled"];
+			[_specifiers addObject:opacitySpecifier];
+		}
 
 		PSSpecifier *footerSpecifier = [PSSpecifier emptyGroupSpecifier];
-        [footerSpecifier setProperty:@"© 2013 - 2017, 2021 PoomSmart" forKey:@"footerText"];
+        [footerSpecifier setProperty:@"© 2013 - 2017, 2021 - 2022 PoomSmart" forKey:@"footerText"];
         [footerSpecifier setProperty:@1 forKey:@"footerAlignment"];
         [_specifiers addObject:footerSpecifier];
 	}
@@ -87,6 +83,7 @@ static int integerValueForKey(CFStringRef key, int defaultValue) {
 	self.navigationItem.title = [specifier name];
 	badgeBorderSize = integerValueForKey(BorderWidth, 3);
 	badgeBorderColorMode = integerValueForKey(BorderColor, 2);
+	badgeOpacity = integerValueForKey(BadgeTintOpacity, 2);
 }
 
 - (NSBundle *)bundle {
@@ -100,25 +97,30 @@ static int integerValueForKey(CFStringRef key, int defaultValue) {
 - (PSTableCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
 	PSTableCell *cell = (PSTableCell *)[super tableView:tableView cellForRowAtIndexPath:indexPath];
 
-	if (indexPath.section <= 1) {
+	if (indexPath.section <= 2) {
 		PSSpecifier *specifier = [cell specifier];
 		switch (indexPath.section) {
 			case 0: {
 				NSNumber *value = [specifier propertyForKey:@"borderSize"];
 				[cell setChecked:badgeBorderSize == [value intValue]];
+				cell.imageView.image = [self badgeForSizeMode:indexPath.row colorMode:3];
 				break;
 			}
 			case 1: {
 				NSNumber *value = [specifier propertyForKey:@"borderColor"];
 				[cell setChecked:badgeBorderColorMode == [value intValue]];
-				if (indexPath.row == 2) {
+				if (indexPath.row == 2)
 					cell.backgroundColor = [UIColor colorWithRed:0.8 green:0.8 blue:0.8 alpha:1];
-				}
+				cell.imageView.image = [self badgeForSizeMode:3 colorMode:indexPath.row];
+				break;
+			}
+			case 2: {
+				NSNumber *value = [specifier propertyForKey:@"opacity"];
+				[cell setChecked:badgeOpacity == [value intValue]];
+				cell.imageView.image = nil;
 				break;
 			}
 		}
-
-		cell.imageView.image = [self badgeForSizeMode:indexPath.section == 0 ? indexPath.row : 3 colorMode:indexPath.section == 1 ? indexPath.row : 3];
 	}
 
 	return cell;
@@ -127,7 +129,7 @@ static int integerValueForKey(CFStringRef key, int defaultValue) {
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
 	[super tableView:tableView didSelectRowAtIndexPath:indexPath];
 	NSInteger section = indexPath.section;
-	if (section > 1) return;
+	if (section > 2) return;
 	NSInteger value = indexPath.row;
 	CFStringRef key;
 	switch (section) {
@@ -138,6 +140,10 @@ static int integerValueForKey(CFStringRef key, int defaultValue) {
 		case 1:
 			key = BorderColor;
 			badgeBorderColorMode = value;
+			break;
+		case 2:
+			key = BadgeTintOpacity;
+			badgeOpacity = value;
 			break;
 	}
 	for (NSInteger i = 0; i <= 4; ++i)

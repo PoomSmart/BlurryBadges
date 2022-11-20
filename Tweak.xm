@@ -118,12 +118,13 @@ int borderWidthMode;
 CGFloat tintAlpha;
 
 static void loadSettings() {
-    id r = [[NSUserDefaults standardUserDefaults] objectForKey:@"SBBadgeBorderColorMode"];
-    borderColorMode = r != nil ? [r intValue] : 2;
-    id r2 = [[NSUserDefaults standardUserDefaults] objectForKey:@"SBBadgeBorderWidth"];
-    borderWidthMode = r2 != nil ? [r2 intValue] : 1;
-    id r3 = [[NSUserDefaults standardUserDefaults] objectForKey:@"SBBadgeTintAlpha"];
-    tintAlpha = r3 != nil ? [r3 floatValue] : 0.65;
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    id r = [defaults objectForKey:@"SBBadgeBorderColorMode"];
+    borderColorMode = r ? [r intValue] : 2;
+    id r2 = [defaults objectForKey:@"SBBadgeBorderWidth"];
+    borderWidthMode = r2 ? [r2 intValue] : 1;
+    id r3 = [defaults objectForKey:@"SBBadgeTintOpacity"];
+    tintAlpha = r3 ? (([r3 intValue] + 1) * 0.2) : 0.6;
 }
 
 static void bbHook(SBIconBadgeView *self, SBIcon *icon) {
@@ -160,9 +161,9 @@ static void bbHook(SBIconBadgeView *self, SBIcon *icon) {
 }
 
 static void hookBadge(SBIconView *iconView) {
-    if ([iconView valueForKey:@"_icon"] != nil) {
+    if ([iconView valueForKey:@"_icon"]) {
         SBIconBadgeView *badgeView = (SBIconBadgeView *)[iconView valueForKey:@"_accessoryView"];
-        if (badgeView != nil)
+        if (badgeView)
             bbHook(badgeView, iconView.icon);
     }
 }
@@ -198,6 +199,11 @@ static void setBadgePosition(SBIconView *iconView, CGPoint center) {
 }
 
 - (void)_updateAccessoryViewWithAnimation:(id)arg1 {
+    %orig;
+    hookBadge(self);
+}
+
+- (void)_updateAccessoryViewAnimated:(BOOL)animated {
     %orig;
     hookBadge(self);
 }
@@ -242,7 +248,7 @@ static void initBadgeView(UIView *self) {
 
 %hook SBIconBadgeView
 
-%property(retain, nonatomic) UIColor *dominantColor;
+%property (retain, nonatomic) UIColor *dominantColor;
 
 %new
 - (void)setWallpaperRelativeCenter:(CGPoint)point {
@@ -275,7 +281,7 @@ static void initBadgeView(UIView *self) {
 
 %hook SBIconContinuityBadgeView
 
-%property(retain, nonatomic) UIColor *dominantColor;
+%property (retain, nonatomic) UIColor *dominantColor;
 
 - (id)init {
     self = %orig;
