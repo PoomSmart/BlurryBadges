@@ -122,7 +122,7 @@ static void loadSettings() {
     id r = [defaults objectForKey:@"SBBadgeBorderColorMode"];
     borderColorMode = r ? [r intValue] : 2;
     id r2 = [defaults objectForKey:@"SBBadgeBorderWidth"];
-    borderWidthMode = r2 ? [r2 intValue] : 1;
+    borderWidthMode = r2 ? [r2 intValue] : 3;
     id r3 = [defaults objectForKey:@"SBBadgeTintOpacity"];
     tintAlpha = r3 ? (([r3 intValue] + 1) * 0.2) : 0.6;
 }
