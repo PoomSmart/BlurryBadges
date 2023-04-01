@@ -1,6 +1,7 @@
 #import "Header.h"
 #import <notify.h>
 #import <dlfcn.h>
+#import <rootless.h>
 
 struct pixel {
     unsigned char r, g, b, a;
@@ -310,6 +311,6 @@ static void bbSettingsChanged(CFNotificationCenterRef center, void *observer, CF
 %ctor {
     loadSettings();
     CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, bbSettingsChanged, CFSTR("com.ps.backdropbadge.update"), NULL, CFNotificationSuspensionBehaviorCoalesce);
-    dlopen("/Library/MobileSubstrate/DynamicLibraries/Anemone.dylib", RTLD_NOW);
+    dlopen(ROOT_PATH("/Library/MobileSubstrate/DynamicLibraries/Anemone.dylib"), RTLD_NOW);
     %init;
 }

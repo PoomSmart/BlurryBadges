@@ -1,11 +1,15 @@
-PACKAGE_VERSION = 1.4.1
+PACKAGE_VERSION = 1.4.2
 
 ifeq ($(SIMULATOR),1)
 	TARGET = simulator:clang:latest:8.0
 	ARCHS = x86_64
 else
-	TARGET = iphone:clang:14.5:7.0
-	ARCHS = armv7 arm64 arm64e
+	ifeq ($(THEOS_PACKAGE_SCHEME),rootless)
+		TARGET = iphone:clang:15.5:14.0
+		ARCHS = arm64 arm64e
+	else
+		TARGET = iphone:clang:15.5:7.0
+	endif
 endif
 
 include $(THEOS)/makefiles/common.mk
