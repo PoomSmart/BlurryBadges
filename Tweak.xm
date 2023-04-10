@@ -299,6 +299,25 @@ static void initBadgeView(UIView *self) {
 
 %end
 
+%hook SBIconContinuityAccessoryView
+
+%property (retain, nonatomic) UIColor *dominantColor;
+
+- (id)init {
+    self = %orig;
+    initBadgeView(self);
+    return self;
+}
+
+- (void)prepareForReuse {
+    %orig;
+    SBDarkeningImageView *bgView = (SBDarkeningImageView *)[self valueForKey:@"_backgroundView"];
+    bgView.image = nil;
+    self.dominantColor = nil;
+}
+
+%end
+
 static void bbSettingsChanged(CFNotificationCenterRef center, void *observer, CFStringRef name, const void *object, CFDictionaryRef userInfo) {
     loadSettings();
     SBIconController *cont = [%c(SBIconController) sharedInstance];

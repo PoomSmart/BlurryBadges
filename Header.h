@@ -44,7 +44,14 @@
 @interface SBIconContinuityBadgeView : UIView
 @end
 
+@interface SBIconContinuityAccessoryView : UIView
+@end
+
 @interface SBIconContinuityBadgeView (BlurryBadges)
+@property(retain, nonatomic) UIColor *dominantColor;
+@end
+
+@interface SBIconContinuityAccessoryView (BlurryBadges)
 @property(retain, nonatomic) UIColor *dominantColor;
 @end
 
