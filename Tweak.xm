@@ -227,9 +227,11 @@ static void initBadgeView(UIView *self) {
     if (self == nil)
         return;
     SBDarkeningImageView *bgView = (SBDarkeningImageView *)[self valueForKey:@"_backgroundView"];
+    bgView.backgroundColor = nil;
     bgView.image = nil;
     CGRect defaultFrame = CGRectMake(0, 0, 24, 24);
-    SBIconBlurryBackgroundView *blurView = [[%c(SBIconBlurryBackgroundView) alloc] initWithFrame:defaultFrame];
+    Class SBIconBlurryBackgroundViewClass = %c(SBIconBlurryBackgroundView);
+    SBIconBlurryBackgroundView *blurView = SBIconBlurryBackgroundViewClass ? [[SBIconBlurryBackgroundViewClass alloc] initWithFrame:defaultFrame] : [[UIView alloc] initWithFrame:defaultFrame];
     blurView.tag = 9596;
     UIView *tintView = [[UIView alloc] initWithFrame:defaultFrame];
     tintView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
