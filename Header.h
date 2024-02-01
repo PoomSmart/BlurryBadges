@@ -67,3 +67,12 @@
 
 @interface SBHIconAccessoryCountedMapImageTuple : NSObject
 @end
+
+@interface SBWallpaperEffectViewBase : UIView
+- (void)setStyle:(NSInteger)style;
+@end
+
+@interface SBWallpaperEffectView : SBWallpaperEffectViewBase // UIView for iOS 13-
+- (instancetype)initWithWallpaperVariant:(NSInteger)variant;
+- (void)setStyle:(NSInteger)style;
+@end

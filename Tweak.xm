@@ -132,7 +132,8 @@ static void bbHook(SBIconBadgeView *self, SBIcon *icon) {
     if (self.dominantColor == nil)
         self.dominantColor = dominantColorFromIcon(icon);
     SBDarkeningImageView *bgView = (SBDarkeningImageView *)[self valueForKey:@"_backgroundView"];
-    CGRect frame = CGRectMake(1, 1, self.frame.size.width - 2, self.frame.size.height - 2);
+    CGFloat shift = 2;
+    CGRect frame = CGRectMake(1, 1, self.frame.size.width - shift, self.frame.size.height - shift);
     CALayer *maskLayer = [CALayer layer];
     maskLayer.frame = frame;
     maskLayer.contents = (id)[roundedRectMask(frame.size) CGImage];
@@ -150,8 +151,9 @@ static void bbHook(SBIconBadgeView *self, SBIcon *icon) {
         }
     }
     CGFloat borderWidth = borderSizeFromMode(borderWidthMode);
-    SBIconBlurryBackgroundView *blurView = (SBIconBlurryBackgroundView *)[bgView viewWithTag:9596];
-    blurView.frame = CGRectMake(0, 0, self.frame.size.width, self.frame.size.height);
+    UIView *blurView = [bgView viewWithTag:9596];
+    CGFloat blurShift = [blurView isKindOfClass:%c(SBWallpaperEffectView)] ? -1 : 0;
+    blurView.frame = CGRectMake(blurShift, blurShift, self.frame.size.width, self.frame.size.height);
     blurView.layer.mask = maskLayer;
     blurView.layer.borderColor = borderWidthMode == 0 ? nil : borderColor.CGColor;
     blurView.layer.borderWidth = borderWidth;
@@ -231,7 +233,15 @@ static void initBadgeView(UIView *self) {
     bgView.image = nil;
     CGRect defaultFrame = CGRectMake(0, 0, 24, 24);
     Class SBIconBlurryBackgroundViewClass = %c(SBIconBlurryBackgroundView);
-    SBIconBlurryBackgroundView *blurView = SBIconBlurryBackgroundViewClass ? [[SBIconBlurryBackgroundViewClass alloc] initWithFrame:defaultFrame] : [[UIView alloc] initWithFrame:defaultFrame];
+    UIView *blurView = nil;
+    if (SBIconBlurryBackgroundViewClass)
+        blurView = [[SBIconBlurryBackgroundViewClass alloc] initWithFrame:defaultFrame];
+    else {
+        SBWallpaperEffectView *view = [[%c(SBWallpaperEffectView) alloc] initWithWallpaperVariant:1];
+        view.bounds = defaultFrame;
+        [view setStyle:26];
+        blurView = view;
+    }
     blurView.tag = 9596;
     UIView *tintView = [[UIView alloc] initWithFrame:defaultFrame];
     tintView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
@@ -253,7 +263,7 @@ static void initBadgeView(UIView *self) {
 
 %property (retain, nonatomic) UIColor *dominantColor;
 
-%new
+%new(v@:{CGPoint=dd})
 - (void)setWallpaperRelativeCenter:(CGPoint)point {
     SBDarkeningImageView *bgView = (SBDarkeningImageView *)[self valueForKey:@"_backgroundView"];
     SBIconBlurryBackgroundView *view = (SBIconBlurryBackgroundView *)[bgView viewWithTag:9596];
