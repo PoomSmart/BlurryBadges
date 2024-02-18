@@ -8,6 +8,10 @@
 #import <SpringBoard/SBFolderIconView.h>
 #import <SpringBoard/SBIconController.h>
 
+@interface NSObject (Private)
+- (id)safeValueForKey:(NSString *)key;
+@end
+
 @interface MTMaterialView : UIView
 @end
 

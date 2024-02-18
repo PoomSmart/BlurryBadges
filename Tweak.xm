@@ -1,7 +1,6 @@
 #import "Header.h"
 #import <notify.h>
 #import <dlfcn.h>
-#import <rootless.h>
 #import <version.h>
 
 struct pixel {
@@ -123,7 +122,7 @@ static void loadSettings() {
 static void bbHook(SBIconBadgeView *self, SBIcon *icon) {
     if (self.dominantColor == nil)
         self.dominantColor = dominantColorFromIcon(icon);
-    SBDarkeningImageView *bgView = (SBDarkeningImageView *)[self valueForKey:@"_backgroundView"];
+    SBDarkeningImageView *bgView = [self valueForKey:@"_backgroundView"];
     CGFloat shift = 2;
     CGRect frame = CGRectMake(1, 1, self.frame.size.width - shift, self.frame.size.height - shift);
     CALayer *maskLayer = [CALayer layer];
@@ -151,6 +150,7 @@ static void bbHook(SBIconBadgeView *self, SBIcon *icon) {
     blurView.layer.borderWidth = borderWidth;
 
     UIView *tint = [blurView viewWithTag:9597];
+    if (tint == nil) tint = [bgView viewWithTag:9597];
     tint.backgroundColor = self.dominantColor;
     tint.alpha = tintAlpha;
 
@@ -182,24 +182,28 @@ static void hookBadge(SBIconView *iconView) {
 static void initBadgeView(UIView *self) {
     if (self == nil)
         return;
-    SBDarkeningImageView *bgView = (SBDarkeningImageView *)[self valueForKey:@"_backgroundView"];
+    SBDarkeningImageView *bgView = [self valueForKey:@"_backgroundView"];
     bgView.backgroundColor = nil;
     bgView.image = nil;
     CGRect defaultFrame = CGRectMake(0, 0, 24, 24);
-    MTMaterialView *blurBgView = [%c(SBIconView) componentBackgroundViewOfType:1 compatibleWithTraitCollection:self.traitCollection initialWeighting:1];
-    SBHomeScreenButton *blurView = [[%c(SBHomeScreenButton) alloc] initWithFrame:defaultFrame backgroundView:blurBgView];
-    blurView.tag = 9596;
-    blurView.layer.cornerRadius = 12;
-    blurView.layer.masksToBounds = YES;
-    UIView *textView = [self valueForKey:@"_textView"];
-    if (textView)
-        [bgView insertSubview:blurView belowSubview:textView];
-    else
-        [bgView addSubview:blurView];
     UIView *tintView = [[UIView alloc] initWithFrame:defaultFrame];
-    tintView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
     tintView.tag = 9597;
-    [blurView addSubview:tintView];
+    UIView *textView = [self safeValueForKey:@"_textView"];
+    if (textView) {
+        MTMaterialView *blurBgView = [%c(SBIconView) componentBackgroundViewOfType:1 compatibleWithTraitCollection:self.traitCollection initialWeighting:1];
+        SBHomeScreenButton *blurView = [[%c(SBHomeScreenButton) alloc] initWithFrame:defaultFrame backgroundView:blurBgView];
+        blurView.tag = 9596;
+        blurView.layer.cornerRadius = 12;
+        blurView.layer.masksToBounds = YES;
+        [bgView insertSubview:blurView belowSubview:textView];
+        tintView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+        [blurView addSubview:tintView];
+    } else {
+        tintView.layer.cornerRadius = 12;
+        tintView.layer.masksToBounds = YES;
+        tintView.frame = CGRectMake(1, 1, 24, 24);
+        [bgView addSubview:tintView];
+    }
 }
 
 %hook SBIconBadgeView
@@ -277,6 +281,5 @@ static void bbSettingsChanged(CFNotificationCenterRef center, void *observer, CF
 %ctor {
     loadSettings();
     CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, bbSettingsChanged, CFSTR("com.ps.backdropbadge.update"), NULL, CFNotificationSuspensionBehaviorCoalesce);
-    dlopen(ROOT_PATH("/Library/MobileSubstrate/DynamicLibraries/Anemone.dylib"), RTLD_NOW);
     %init;
 }
