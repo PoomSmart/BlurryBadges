@@ -70,7 +70,7 @@ static int integerValueForKey(CFStringRef key, int defaultValue) {
 		}
 
 		PSSpecifier *footerSpecifier = [PSSpecifier emptyGroupSpecifier];
-        [footerSpecifier setProperty:@"© 2013 - 2017, 2021 - 2023 PoomSmart" forKey:@"footerText"];
+        [footerSpecifier setProperty:@"© 2013 - 2017, 2021 - 2024 PoomSmart" forKey:@"footerText"];
         [footerSpecifier setProperty:@1 forKey:@"footerAlignment"];
         [_specifiers addObject:footerSpecifier];
 	}

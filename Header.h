@@ -8,6 +8,9 @@
 #import <SpringBoard/SBFolderIconView.h>
 #import <SpringBoard/SBIconController.h>
 
+@interface MTMaterialView : UIView
+@end
+
 @interface SBWallpaperController : NSObject
 + (instancetype)sharedInstance;
 - (NSInteger)variant;
@@ -23,7 +26,7 @@
 
 @interface SBIconView (Additions)
 + (CGSize)defaultIconImageSize;
-@property (assign, nonatomic) CGPoint wallpaperRelativeImageCenter;
++ (MTMaterialView *)componentBackgroundViewOfType:(NSInteger)type compatibleWithTraitCollection:(UITraitCollection *)traitCollection initialWeighting:(CGFloat)initialWeighting;
 - (CGPoint)_centerForCloseBoxRelativeToVisibleImageFrame:(CGRect)visibleImageFrame;
 - (SBIconImageView *)_iconImageView;
 @end
@@ -34,7 +37,6 @@
 
 @interface SBIconBadgeView : UIView
 - (BOOL)displayingAccessory;
-- (void)setWallpaperRelativeCenter:(CGPoint)center;
 @end
 
 @interface SBIconBadgeView (BlurryBadges)
@@ -55,10 +57,6 @@
 @property(retain, nonatomic) UIColor *dominantColor;
 @end
 
-@interface SBIconBlurryBackgroundView : UIView
-- (void)setWallpaperRelativeCenter:(CGPoint)center;
-@end
-
 @interface SBIconAccessoryImage : UIImage
 @end
 
@@ -68,11 +66,11 @@
 @interface SBHIconAccessoryCountedMapImageTuple : NSObject
 @end
 
-@interface SBWallpaperEffectViewBase : UIView
-- (void)setStyle:(NSInteger)style;
+@interface SBHomeScreenMaterialView : UIView
 @end
 
-@interface SBWallpaperEffectView : SBWallpaperEffectViewBase // UIView for iOS 13-
-- (instancetype)initWithWallpaperVariant:(NSInteger)variant;
-- (void)setStyle:(NSInteger)style;
+@interface SBHomeScreenButton : UIButton
+- (instancetype)initWithFrame:(CGRect)frame backgroundView:(UIView *)backgroundView;
+- (SBHomeScreenMaterialView *)materialView;
+@property (nonatomic, strong, readwrite) UIView *backgroundView;
 @end

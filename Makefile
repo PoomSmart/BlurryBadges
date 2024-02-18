@@ -1,4 +1,5 @@
-PACKAGE_VERSION = 1.4.5
+PACKAGE_VERSION = 1.5.0
+INSTALL_TARGET_PROCESSES = SpringBoard
 
 ifeq ($(SIMULATOR),1)
 	TARGET = simulator:clang:latest:8.0
@@ -10,6 +11,7 @@ endif
 include $(THEOS)/makefiles/common.mk
 TWEAK_NAME = BackdropBadge
 $(TWEAK_NAME)_FILES = Tweak.xm
+$(TWEAK_NAME)_CFLAGS = -fobjc-arc
 $(TWEAK_NAME)_FRAMEWORKS = CoreGraphics QuartzCore
 $(TWEAK_NAME)_USE_SUBSTRATE = 1
 
