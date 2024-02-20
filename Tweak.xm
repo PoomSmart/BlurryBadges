@@ -159,7 +159,7 @@ static void bbHook(SBIconBadgeView *self, SBIcon *icon) {
 
 static void hookBadge(SBIconView *iconView) {
     if ([iconView valueForKey:@"_icon"]) {
-        SBIconBadgeView *badgeView = (SBIconBadgeView *)[iconView valueForKey:@"_accessoryView"];
+        SBIconBadgeView *badgeView = [iconView valueForKey:@"_accessoryView"];
         if (badgeView)
             bbHook(badgeView, iconView.icon);
     }
@@ -243,7 +243,7 @@ static void initBadgeView(UIView *self) {
 
 - (void)prepareForReuse {
     %orig;
-    SBDarkeningImageView *bgView = (SBDarkeningImageView *)[self valueForKey:@"_backgroundView"];
+    SBDarkeningImageView *bgView = [self valueForKey:@"_backgroundView"];
     bgView.image = nil;
     self.dominantColor = nil;
 }
@@ -262,7 +262,7 @@ static void initBadgeView(UIView *self) {
 
 - (void)prepareForReuse {
     %orig;
-    SBDarkeningImageView *bgView = (SBDarkeningImageView *)[self valueForKey:@"_backgroundView"];
+    SBDarkeningImageView *bgView = [self valueForKey:@"_backgroundView"];
     bgView.image = nil;
     self.dominantColor = nil;
 }
