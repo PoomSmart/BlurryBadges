@@ -198,12 +198,14 @@ static void initBadgeView(UIView *self) {
         [bgView insertSubview:blurView belowSubview:textView];
         tintView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
         [blurView addSubview:tintView];
+        [blurView release];
     } else {
         tintView.layer.cornerRadius = 12;
         tintView.layer.masksToBounds = YES;
         tintView.frame = CGRectMake(1, 1, 24, 24);
         [bgView addSubview:tintView];
     }
+    [tintView release];
 }
 
 %hook SBIconBadgeView
