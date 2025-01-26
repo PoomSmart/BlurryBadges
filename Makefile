@@ -5,7 +5,11 @@ ifeq ($(SIMULATOR),1)
 	TARGET = simulator:clang:latest:8.0
 	ARCHS = x86_64
 else
-	TARGET = iphone:clang:15.6:14.0
+	ifeq ($(THEOS_PACKAGE_SCHEME),rootful)
+		TARGET = iphone:clang:16.5:14.0
+	else
+		TARGET = iphone:clang:16.5:15.0
+	endif
 endif
 
 include $(THEOS)/makefiles/common.mk

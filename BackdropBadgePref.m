@@ -1,10 +1,10 @@
+#import <PSHeader/Misc.h>
 #import <UIKit/UIColor+Private.h>
 #import <UIKit/UIImage+Private.h>
 #import <Preferences/PSListController.h>
 #import <Preferences/PSSpecifier.h>
 #import <Preferences/PSTableCell.h>
 #import <notify.h>
-#import <rootless.h>
 
 #define SB CFSTR("com.apple.springboard")
 #define BorderWidth CFSTR("SBBadgeBorderWidth")
@@ -70,7 +70,7 @@ static int integerValueForKey(CFStringRef key, int defaultValue) {
         }
 
         PSSpecifier *footerSpecifier = [PSSpecifier emptyGroupSpecifier];
-        [footerSpecifier setProperty:@"© 2013 - 2017, 2021 - 2024 PoomSmart" forKey:@"footerText"];
+        [footerSpecifier setProperty:@"© 2013 - 2017, 2021 - 2025 PoomSmart" forKey:@"footerText"];
         [footerSpecifier setProperty:@1 forKey:@"footerAlignment"];
         [_specifiers addObject:footerSpecifier];
     }
@@ -87,7 +87,7 @@ static int integerValueForKey(CFStringRef key, int defaultValue) {
 }
 
 - (NSBundle *)bundle {
-    return [NSBundle bundleWithPath:ROOT_PATH_NS(@"/Library/PreferenceBundles/BackdropBadgePref.bundle")];
+    return [NSBundle bundleWithPath:PS_ROOT_PATH_NS(@"/Library/PreferenceBundles/BackdropBadgePref.bundle")];
 }
 
 - (UIImage *)badgeForSizeMode:(int)size colorMode:(int)color {

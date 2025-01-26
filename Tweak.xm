@@ -8,11 +8,7 @@ struct pixel {
 };
 
 static UIColor *dominantColorFromIcon(SBIcon *icon) {
-    UIImage *iconImage = nil;
-    if (@available(iOS 13.0, *))
-        iconImage = [icon generateIconImageWithInfo:(SBIconImageInfo) { .size = CGSizeMake(60, 60), .scale = 1, .continuousCornerRadius = 12 }];
-    else
-        iconImage = [icon getIconImage:2];
+    UIImage *iconImage = [icon generateIconImageWithInfo:(SBIconImageInfo) { .size = CGSizeMake(60, 60), .scale = 1, .continuousCornerRadius = 12 }];
     if (iconImage == nil)
         return [UIColor blackColor];
     NSUInteger red = 0, green = 0, blue = 0;
