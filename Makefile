@@ -5,10 +5,12 @@ ifeq ($(SIMULATOR),1)
 	TARGET = simulator:clang:latest:8.0
 	ARCHS = x86_64
 else
-	ifeq ($(THEOS_PACKAGE_SCHEME),rootful)
-		TARGET = iphone:clang:16.5:14.0
-	else
+	ifeq ($(THEOS_PACKAGE_SCHEME),rootless)
 		TARGET = iphone:clang:16.5:15.0
+	else ifeq ($(THEOS_PACKAGE_SCHEME),roothide)
+		TARGET = iphone:clang:16.5:15.0
+	else
+		TARGET = iphone:clang:16.5:14.0
 	endif
 endif
 
