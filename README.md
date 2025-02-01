@@ -1,4 +1,4 @@
 BlurryBadges
 ===========
 
-Colored blur for SpringBoard icon badges on iOS 14+.
+Colored blur for SpringBoard icon badges on iOS 13+.
