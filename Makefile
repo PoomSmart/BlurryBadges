@@ -1,16 +1,17 @@
-PACKAGE_VERSION = 1.5.2
+PACKAGE_VERSION = 1.5.3
 INSTALL_TARGET_PROCESSES = SpringBoard
 
 ifeq ($(SIMULATOR),1)
-	TARGET = simulator:clang:latest:8.0
-	ARCHS = x86_64
+	TARGET = simulator:clang:latest:15.0
+	ARCHS = arm64 x86_64
 else
 	ifeq ($(THEOS_PACKAGE_SCHEME),rootless)
 		TARGET = iphone:clang:16.5:15.0
 	else ifeq ($(THEOS_PACKAGE_SCHEME),roothide)
 		TARGET = iphone:clang:16.5:15.0
 	else
-		TARGET = iphone:clang:16.5:14.0
+		TARGET = iphone:clang:14.5:13.0
+		export PREFIX = $(THEOS)/toolchain/Xcode11.xctoolchain/usr/bin/
 	endif
 endif
 

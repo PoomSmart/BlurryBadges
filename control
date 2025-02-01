@@ -1,9 +1,9 @@
-Name: BlurryBadges (iOS 14+)
+Name: BlurryBadges (iOS 13+)
 Package: com.ps.blurrybadges
 Conflicts: org.thebigboss.blurrybadges, com.spicat.blurrybadges
 Author: PoomSmart
 Maintainer: PoomSmart
-Depends: firmware (>= 14.0), mobilesubstrate, preferenceloader
+Depends: firmware (>= 13.0), mobilesubstrate, preferenceloader
 Section: Tweaks
 Version: 1.0.0
 Architecture: iphoneos-arm

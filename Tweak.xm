@@ -186,7 +186,7 @@ static void initBadgeView(UIView *self) {
     tintView.tag = 9597;
     UIView *textView = [self safeValueForKey:@"_textView"];
     if (textView) {
-        MTMaterialView *blurBgView = [%c(SBIconView) componentBackgroundViewOfType:1 compatibleWithTraitCollection:self.traitCollection initialWeighting:1];
+        MTMaterialView *blurBgView = IS_IOS_OR_NEWER(iOS_14_0) ? [%c(SBIconView) componentBackgroundViewOfType:1 compatibleWithTraitCollection:self.traitCollection initialWeighting:1] : [%c(SBIconView) componentBackgroundView];
         SBHomeScreenButton *blurView = [[%c(SBHomeScreenButton) alloc] initWithFrame:defaultFrame backgroundView:blurBgView];
         blurView.tag = 9596;
         blurView.layer.cornerRadius = 12;

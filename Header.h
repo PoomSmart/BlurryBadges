@@ -30,7 +30,8 @@
 
 @interface SBIconView (Additions)
 + (CGSize)defaultIconImageSize;
-+ (MTMaterialView *)componentBackgroundViewOfType:(NSInteger)type compatibleWithTraitCollection:(UITraitCollection *)traitCollection initialWeighting:(CGFloat)initialWeighting;
++ (MTMaterialView *)componentBackgroundView;
++ (MTMaterialView *)componentBackgroundViewOfType:(NSInteger)type compatibleWithTraitCollection:(UITraitCollection *)traitCollection initialWeighting:(CGFloat)initialWeighting; // iOS 14+
 - (CGPoint)_centerForCloseBoxRelativeToVisibleImageFrame:(CGRect)visibleImageFrame;
 - (SBIconImageView *)_iconImageView;
 @end
