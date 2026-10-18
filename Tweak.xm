@@ -7,31 +7,120 @@ struct pixel {
     unsigned char r, g, b, a;
 };
 
-static UIColor *dominantColorFromIcon(SBIcon *icon) {
-    UIImage *iconImage = [icon generateIconImageWithInfo:(SBIconImageInfo) { .size = CGSizeMake(60, 60), .scale = 1, .continuousCornerRadius = 12 }];
-    if (iconImage == nil)
-        return [UIColor blackColor];
-    NSUInteger red = 0, green = 0, blue = 0;
+static UIImage *imageFromIconServicesIcon(ISIcon *isIcon) {
+    if (!isIcon)
+        return nil;
+    Class descriptorClass = NSClassFromString(@"ISImageDescriptor");
+    ISImageDescriptor *descriptor = [[descriptorClass alloc] initWithSize:CGSizeMake(60, 60) scale:2];
+    if ([descriptor respondsToSelector:@selector(setShouldApplyMask:)])
+        descriptor.shouldApplyMask = YES;
+    IFImage *isImage = nil;
+    if ([isIcon respondsToSelector:@selector(prepareImageForDescriptor:)])
+        isImage = [isIcon prepareImageForDescriptor:descriptor];
+    [descriptor release];
+    if (!isImage.CGImage || isImage.placeholder)
+        return nil;
+    CGFloat scale = isImage.scale > 0 ? isImage.scale : 2;
+    return [UIImage imageWithCGImage:isImage.CGImage scale:scale orientation:UIImageOrientationUp];
+}
+
+static UIImage *snapshotOfView(UIView *view) {
+    if (!view || CGRectIsEmpty(view.bounds))
+        return nil;
+    UIGraphicsBeginImageContextWithOptions(view.bounds.size, NO, 0);
+    [view drawViewHierarchyInRect:view.bounds afterScreenUpdates:NO];
+    UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    return image;
+}
+
+static UIColor *dominantColorFromImage(UIImage *iconImage) {
     CGImageRef iconCGImage = iconImage.CGImage;
-    struct pixel *pixels = (struct pixel *)calloc(1, iconImage.size.width * iconImage.size.height * sizeof(struct pixel));
-    if (pixels != nil)     {
-        CGContextRef context = CGBitmapContextCreate((void *)pixels, iconImage.size.width, iconImage.size.height, 8, iconImage.size.width * 4, CGImageGetColorSpace(iconCGImage), kCGImageAlphaPremultipliedLast);
-        if (context != NULL) {
-            CGContextDrawImage(context, CGRectMake(0.0, 0.0, iconImage.size.width, iconImage.size.height), iconCGImage);
-            NSUInteger numberOfPixels = iconImage.size.width * iconImage.size.height;
-            for (int i = 0; i < numberOfPixels; ++i) {
-                red += pixels[i].r;
-                green += pixels[i].g;
-                blue += pixels[i].b;
-            }
-            red /= numberOfPixels;
-            green /= numberOfPixels;
-            blue /= numberOfPixels;
-            CGContextRelease(context);
+    if (!iconCGImage)
+        return nil;
+    size_t width = CGImageGetWidth(iconCGImage);
+    size_t height = CGImageGetHeight(iconCGImage);
+    if (width == 0 || height == 0)
+        return nil;
+    struct pixel *pixels = (struct pixel *)calloc(width * height, sizeof(struct pixel));
+    if (!pixels)
+        return nil;
+    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+    CGContextRef context = CGBitmapContextCreate(pixels, width, height, 8, width * 4, colorSpace, (CGBitmapInfo)kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big);
+    CGColorSpaceRelease(colorSpace);
+    UIColor *color = nil;
+    if (context) {
+        CGContextDrawImage(context, CGRectMake(0, 0, width, height), iconCGImage);
+        NSUInteger red = 0, green = 0, blue = 0, count = 0;
+        NSUInteger numberOfPixels = width * height;
+        for (NSUInteger i = 0; i < numberOfPixels; ++i) {
+            if (pixels[i].a < 16)
+                continue;
+            red += pixels[i].r;
+            green += pixels[i].g;
+            blue += pixels[i].b;
+            count++;
         }
-        free(pixels);
+        if (count > 0)
+            color = [UIColor colorWithRed:(red / (CGFloat)count) / 255.0 green:(green / (CGFloat)count) / 255.0 blue:(blue / (CGFloat)count) / 255.0 alpha:1.0];
+        CGContextRelease(context);
     }
-    return [UIColor colorWithRed:red/255.0 green:green/255.0 blue:blue/255.0 alpha:1.0];
+    free(pixels);
+    return color;
+}
+
+static UIColor *dominantColorFromIconView(SBIconView *iconView) {
+    SBIcon *icon = iconView.icon;
+    SBIconImageView *imageView = [iconView respondsToSelector:@selector(_iconImageView)] ? [iconView _iconImageView] : nil;
+    NSMutableArray *candidates = [NSMutableArray array];
+    if ([iconView respondsToSelector:@selector(iconImageSnapshot)]) {
+        UIImage *snapshot = [iconView iconImageSnapshot];
+        if (snapshot)
+            [candidates addObject:snapshot];
+    }
+    if ([imageView respondsToSelector:@selector(snapshot)]) {
+        UIImage *snapshot = [imageView snapshot];
+        if (snapshot)
+            [candidates addObject:snapshot];
+    }
+    UIImage *viewSnapshot = snapshotOfView(imageView);
+    if (viewSnapshot)
+        [candidates addObject:viewSnapshot];
+    UIImage *displayed = imageView.displayedImage ?: ([imageView respondsToSelector:@selector(contentsImage)] ? [imageView contentsImage] : nil);
+    if (displayed)
+        [candidates addObject:displayed];
+
+    ISIcon *isIcon = [icon respondsToSelector:@selector(iconServicesIconForImage)] ? [icon iconServicesIconForImage] : nil;
+    NSString *bundleID = [icon applicationBundleID] ?: ([icon respondsToSelector:@selector(applicationBundleIdentifierForImage)] ? [icon applicationBundleIdentifierForImage] : nil);
+    if (!isIcon && bundleID.length) {
+        Class iconClass = NSClassFromString(@"ISBundleIdentifierIcon");
+        isIcon = [[iconClass alloc] initWithBundleIdentifier:bundleID];
+    } else {
+        [isIcon retain];
+    }
+    UIImage *isImage = imageFromIconServicesIcon(isIcon);
+    [isIcon release];
+    if (isImage)
+        [candidates addObject:isImage];
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunguarded-availability-new"
+    SBIconImageInfo info = { .size = CGSizeMake(60, 60), .scale = 1, .continuousCornerRadius = 12 };
+    UIImage *legacy = nil;
+    if ([icon respondsToSelector:@selector(generateIconImageWithInfo:)])
+        legacy = [icon generateIconImageWithInfo:info];
+    else if ([icon respondsToSelector:@selector(getIconImage:)])
+        legacy = [icon getIconImage:MIIconVariantDefault];
+#pragma clang diagnostic pop
+    if (legacy)
+        [candidates addObject:legacy];
+
+    for (UIImage *image in candidates) {
+        UIColor *color = dominantColorFromImage(image);
+        if (color)
+            return color;
+    }
+    return nil;
 }
 
 static UIColor *colorShiftedBy(UIColor *color, CGFloat shift) {
@@ -115,9 +204,10 @@ static void loadSettings() {
     tintAlpha = r3 ? (([r3 intValue] + 1) * 0.2) : 0.6;
 }
 
-static void bbHook(SBIconBadgeView *self, SBIcon *icon) {
+static void bbHook(SBIconBadgeView *self, SBIconView *iconView) {
+    SBIcon *icon = iconView.icon;
     if (self.dominantColor == nil)
-        self.dominantColor = dominantColorFromIcon(icon);
+        self.dominantColor = dominantColorFromIconView(iconView);
     SBDarkeningImageView *bgView = [self valueForKey:@"_backgroundView"];
     CGFloat shift = 2;
     CGRect frame = CGRectMake(1, 1, self.frame.size.width - shift, self.frame.size.height - shift);
@@ -157,7 +247,7 @@ static void hookBadge(SBIconView *iconView) {
     if ([iconView valueForKey:@"_icon"]) {
         SBIconBadgeView *badgeView = [iconView valueForKey:@"_accessoryView"];
         if (badgeView)
-            bbHook(badgeView, iconView.icon);
+            bbHook(badgeView, iconView);
     }
 }
 

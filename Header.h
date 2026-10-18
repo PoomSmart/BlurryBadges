@@ -23,9 +23,14 @@
 
 @interface SBIcon (Additions)
 - (void)noteBadgeDidChange;
+- (id)iconServicesIconForImage;
+- (NSString *)applicationBundleIdentifierForImage;
 @end
 
 @interface SBIconImageView : UIView
+@property (retain, nonatomic) UIImage *displayedImage;
+- (UIImage *)contentsImage;
+- (UIImage *)snapshot;
 @end
 
 @interface SBIconView (Additions)
@@ -34,6 +39,26 @@
 + (MTMaterialView *)componentBackgroundViewOfType:(NSInteger)type compatibleWithTraitCollection:(UITraitCollection *)traitCollection initialWeighting:(CGFloat)initialWeighting; // iOS 14+
 - (CGPoint)_centerForCloseBoxRelativeToVisibleImageFrame:(CGRect)visibleImageFrame;
 - (SBIconImageView *)_iconImageView;
+- (UIImage *)iconImageSnapshot;
+@end
+
+@interface ISImageDescriptor : NSObject
+- (instancetype)initWithSize:(CGSize)size scale:(CGFloat)scale;
+@property (nonatomic) BOOL shouldApplyMask;
+@end
+
+@interface ISIcon : NSObject
+- (id)prepareImageForDescriptor:(ISImageDescriptor *)descriptor;
+@end
+
+@interface ISBundleIdentifierIcon : ISIcon
+- (instancetype)initWithBundleIdentifier:(NSString *)bundleIdentifier;
+@end
+
+@interface IFImage : NSObject
+@property (readonly, nonatomic) CGImageRef CGImage;
+@property (readonly, nonatomic) CGFloat scale;
+@property (readonly, nonatomic) BOOL placeholder;
 @end
 
 @interface SBIconModel (Additions)

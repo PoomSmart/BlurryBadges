@@ -5,7 +5,7 @@ Author: PoomSmart
 Maintainer: PoomSmart
 Depends: firmware (>= 13.0), mobilesubstrate, preferenceloader
 Section: Tweaks
-Version: 1.0.0
+Version: 1.5.4
 Architecture: iphoneos-arm
 Description: Colored blur for SpringBoard icon badges.
 Depiction: https://poomsmart.github.io/repo/depictions/blurrybadges.html
